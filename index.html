@@ -1,0 +1,184 @@
+# index.html
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Planner Obras Romero</title>
+
+  <link rel="stylesheet" href="styles.css"/>
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet"/>
+
+  <!-- Toastify -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div class="login-container" id="loginContainer">
+
+    <div class="login-card">
+
+      <img src="https://i.imgur.com/Z9qV6Q8.png" class="logo"/>
+
+      <h2>SELECCIONÁ TU ROL</h2>
+
+      <select id="rolSelect">
+        <option value="">-- Seleccioná un rol --</option>
+        <option value="admin">🔑 Admin</option>
+        <option value="visor">👁️ Visor</option>
+      </select>
+
+      <button onclick="ingresar()">Ingresar</button>
+
+    </div>
+
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+
+    <!-- NAVBAR -->
+    <nav>
+
+      <div class="nav-left">
+        <img src="https://i.imgur.com/Z9qV6Q8.png" class="nav-logo"/>
+        <span>Planner Obras</span>
+      </div>
+
+      <div class="nav-center">
+
+        <button id="btnCarga" onclick="mostrarVista('cargar')">
+          Cargar
+        </button>
+
+        <button onclick="mostrarVista('estados')">
+          Estados
+        </button>
+
+        <button onclick="mostrarVista('calendario')">
+          Calendario
+        </button>
+
+      </div>
+
+      <div class="nav-right">
+
+        <span id="usuarioRol"></span>
+
+        <button class="logout" onclick="logout()">
+          Salir
+        </button>
+
+      </div>
+
+    </nav>
+
+    <!-- CONTENIDO -->
+    <main>
+
+      <!-- CARGAR -->
+      <section id="vista-cargar" class="vista">
+
+        <div class="card">
+
+          <h2>Nueva Tarea</h2>
+
+          <input type="text" id="sector" placeholder="Sector"/>
+
+          <input type="text" id="equipo" placeholder="Equipo"/>
+
+          <textarea id="descripcion" placeholder="Descripción"></textarea>
+
+          <label>Inicio estimado</label>
+          <input type="date" id="inicioEst"/>
+
+          <label>Fin estimado</label>
+          <input type="date" id="finEst"/>
+
+          <label>Inicio real</label>
+          <input type="date" id="inicioReal"/>
+
+          <label>Fin real</label>
+          <input type="date" id="finReal"/>
+
+          <select id="estado">
+            <option>Pendiente</option>
+            <option>En progreso</option>
+            <option>Finalizada</option>
+            <option>Demorada</option>
+          </select>
+
+          <button onclick="guardarTarea()">
+            Guardar
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- ESTADOS -->
+      <section id="vista-estados" class="vista hidden">
+
+        <div class="estado-container">
+
+          <div class="estado-card pendiente">
+            <h3>🟡 Pendientes</h3>
+            <div id="pendientes"></div>
+          </div>
+
+          <div class="estado-card progreso">
+            <h3>🔵 En progreso</h3>
+            <div id="enProgreso"></div>
+          </div>
+
+          <div class="estado-card finalizada">
+            <h3>🟢 Finalizadas</h3>
+            <div id="finalizadas"></div>
+          </div>
+
+          <div class="estado-card demorada">
+            <h3>🔴 Demoradas</h3>
+            <div id="demoradas"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- CALENDARIO -->
+      <section id="vista-calendario" class="vista hidden">
+
+        <div class="calendar-card">
+          <div id="calendar"></div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Firebase -->
+  <script type="module" src="firebase-config.js"></script>
+
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <!-- Toastify(? -->
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <!-- SweetAlert -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script type="module" src="script.js"></script>
+
+</body>
+</html>
+```
