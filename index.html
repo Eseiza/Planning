@@ -8,6 +8,26 @@
   <link rel="stylesheet" href="styles.css"/>
 
 <!-- LOGIN -->
+<!-- LOGIN -->
+  <div class="login-container" id="loginContainer">
+
+    <div class="login-card">
+
+      <img src="https://i.imgur.com/Z9qV6Q8.png" class="logo"/>
+
+      <h2>SELECCIONÁ TU ROL</h2>
+
+      <select id="rolSelect">
+        <option value="">-- Seleccioná un rol --</option>
+        <option value="admin">🔑 Admin</option>
+        <option value="visor">👁️ Visor</option>
+      </select>
+
+      <button onclick="ingresar()">Ingresar</button>
+
+    </div>
+
+  </div>
 
 <div
   class="login-container"
@@ -54,27 +74,6 @@
 </head>
 
 <body>
-
-  <!-- LOGIN -->
-  <div class="login-container" id="loginContainer">
-
-    <div class="login-card">
-
-      <img src="https://i.imgur.com/Z9qV6Q8.png" class="logo"/>
-
-      <h2>SELECCIONÁ TU ROL</h2>
-
-      <select id="rolSelect">
-        <option value="">-- Seleccioná un rol --</option>
-        <option value="admin">🔑 Admin</option>
-        <option value="visor">👁️ Visor</option>
-      </select>
-
-      <button onclick="ingresar()">Ingresar</button>
-
-    </div>
-
-  </div>
 
   <!-- APP -->
   <div id="app" class="hidden">
