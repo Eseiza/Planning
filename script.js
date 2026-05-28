@@ -1,58 +1,45 @@
-import {
-  auth,
-  db
-} from './firebase-config.js';
+// ─────────────────────────────────────────
+// USUARIOS
+// ─────────────────────────────────────────
 
-import {
-  signInWithEmailAndPassword,
-  signOut
-}
-from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+const USUARIOS = [
 
-import {
-  doc,
-  getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  {
+    usuario: "admin",
+    contrasena: "admin.2026",
+    rol: "admin"
+  },
 
-let rolUsuario = '';
+  {
+    usuario: "visor",
+    contrasena: "visor.2026",
+    rol: "visor"
+  }
 
-/* LOGIN */
+];
 
-window.login = async function(){
+let usuarioActual = null;
 
-  const email =
-    document.getElementById('email').value;
 
-  const password =
+// ─────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────
+
+window.login = function(){
+
+  const usuario =
+    document.getElementById('usuario').value;
+
+  const contrasena =
     document.getElementById('password').value;
 
-  try{
+  const encontrado =
+    USUARIOS.find(u =>
+      u.usuario === usuario &&
+      u.contrasena === contrasena
+    );
 
-    const credenciales =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-    const uid = credenciales.user.uid;
-
-    const usuarioRef =
-      doc(db,'usuarios',uid);
-
-    const usuarioSnap =
-      await getDoc(usuarioRef);
-
-    const usuario =
-      usuarioSnap.data();
-
-    rolUsuario = usuario.rol;
-
-    iniciarSistema(usuario);
-
-  }
-  catch(error){
+  if(!encontrado){
 
     Swal.fire({
       icon:'error',
@@ -60,13 +47,22 @@ window.login = async function(){
       text:'Usuario o contraseña incorrectos'
     });
 
+    return;
+
   }
+
+  usuarioActual = encontrado;
+
+  iniciarSistema();
 
 }
 
-/* INICIAR SISTEMA */
 
-function iniciarSistema(usuario){
+// ─────────────────────────────────────────
+// INICIAR SISTEMA
+// ─────────────────────────────────────────
+
+function iniciarSistema(){
 
   document
     .getElementById('loginContainer')
@@ -79,11 +75,11 @@ function iniciarSistema(usuario){
   document
     .getElementById('usuarioRol')
     .innerText =
-      usuario.nombre + ' - ' + usuario.rol;
+      usuarioActual.usuario.toUpperCase();
 
-  /* SI ES VISOR */
+  // SI ES VISOR
 
-  if(usuario.rol === 'visor'){
+  if(usuarioActual.rol === 'visor'){
 
     document
       .getElementById('btnCarga')
@@ -97,13 +93,13 @@ function iniciarSistema(usuario){
 
 }
 
-/* LOGOUT */
 
-window.logout = async function(){
+// ─────────────────────────────────────────
+// LOGOUT
+// ─────────────────────────────────────────
 
-  await signOut(auth);
+window.logout = function(){
 
   location.reload();
 
 }
-```
