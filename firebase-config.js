@@ -12,19 +12,13 @@ import {
 from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
-
-  apiKey: "TU_API_KEY",
-
-  authDomain: "TU_AUTH_DOMAIN",
-
-  projectId: "TU_PROJECT_ID",
-
-  storageBucket: "TU_STORAGE_BUCKET",
-
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-
-  appId: "TU_APP_ID"
-
+  apiKey: "AIzaSyChA3HyR-wRvpQX1rYoFcpC4QBsMpmm2x8",
+  authDomain: "planning-4c106.firebaseapp.com",
+  projectId: "planning-4c106",
+  storageBucket: "planning-4c106.firebasestorage.app",
+  messagingSenderId: "57138484731",
+  appId: "1:57138484731:web:51703733ddf21ea018675e",
+  measurementId: "G-BJZF7927BC"
 };
 
 const app = initializeApp(firebaseConfig);
