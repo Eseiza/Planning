@@ -10,7 +10,6 @@ const firebaseConfig = {
     messagingSenderId: "350498956335",
     appId: "1:350498956335:web:901f91c4d7b983308252da"
 };
-
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -19,19 +18,16 @@ const db = firebase.database();
 // ─────────────────────────────────────────
 // AUTH GUARD
 // ─────────────────────────────────────────
-const autenticado = sessionStorage.getItem('autenticado');
-const rolActual   = sessionStorage.getItem('rol');
+const autenticado   = sessionStorage.getItem('autenticado');
+const rolActual     = sessionStorage.getItem('rol');
 const usuarioNombre = sessionStorage.getItem('usuario');
 
 if (!autenticado) {
     window.location.href = './index.html';
 }
 
-// Mostrar nombre de usuario en navbar
 const spanUsuario = document.getElementById('usuarioActual');
-if (spanUsuario) {
-    spanUsuario.textContent = usuarioNombre || '';
-}
+if (spanUsuario) spanUsuario.textContent = usuarioNombre || '';
 
 // ─────────────────────────────────────────
 // LOGOUT
@@ -42,36 +38,21 @@ function logout() {
 }
 
 // ─────────────────────────────────────────
-// NAVEGACIÓN ENTRE VISTAS
+// NAVEGACIÓN
 // ─────────────────────────────────────────
 function mostrarVista(nombre) {
-    // Ocultar todas las vistas
     document.querySelectorAll('.vista').forEach(v => v.classList.add('hidden'));
-    // Quitar activo de todos los botones
     document.querySelectorAll('.nav-center button').forEach(b => b.classList.remove('active'));
 
-    // Mostrar la vista pedida
     const vista = document.getElementById('vista-' + nombre);
     if (vista) vista.classList.remove('hidden');
 
-    // Activar el botón correspondiente
-    const btnMap = {
-        'cargar':    'btnCarga',
-        'estados':   'btnEstados',
-        'calendario':'btnCalendario'
-    };
+    const btnMap = { 'cargar': 'btnCarga', 'estados': 'btnEstados', 'calendario': 'btnCalendario' };
     const btn = document.getElementById(btnMap[nombre]);
     if (btn) btn.classList.add('active');
 
-    // Inicializar calendario solo cuando se muestra esa vista
-    if (nombre === 'calendario') {
-        setTimeout(iniciarCalendario, 100);
-    }
-
-    // Cargar estados cuando se muestra esa vista
-    if (nombre === 'estados') {
-        cargarEstados();
-    }
+    if (nombre === 'calendario') setTimeout(iniciarCalendario, 100);
+    if (nombre === 'estados')    cargarEstados();
 }
 
 // ─────────────────────────────────────────
@@ -83,8 +64,6 @@ function guardarTarea() {
     const descripcion = document.getElementById('descripcion')?.value.trim();
     const inicioEst   = document.getElementById('inicioEst')?.value;
     const finEst      = document.getElementById('finEst')?.value;
-    const inicioReal  = document.getElementById('inicioReal')?.value;
-    const finReal     = document.getElementById('finReal')?.value;
     const estado      = document.getElementById('estado')?.value;
 
     if (!sector || !equipo || !descripcion) {
@@ -93,13 +72,11 @@ function guardarTarea() {
     }
 
     const tarea = {
-        sector,
-        equipo,
-        descripcion,
+        sector, equipo, descripcion,
         inicioEst:  inicioEst  || '',
         finEst:     finEst     || '',
-        inicioReal: inicioReal || '',
-        finReal:    finReal    || '',
+        inicioReal: '',
+        finReal:    '',
         estado,
         creadoPor: usuarioNombre,
         timestamp: Date.now()
@@ -108,16 +85,13 @@ function guardarTarea() {
     db.ref('tareas').push(tarea)
         .then(() => {
             alert('Tarea guardada correctamente.');
-            // Limpiar formulario
-            ['sector','equipo','descripcion','inicioEst','finEst','inicioReal','finReal'].forEach(id => {
+            ['sector','equipo','descripcion','inicioEst','finEst'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
             document.getElementById('estado').value = 'Pendiente';
         })
-        .catch(err => {
-            alert('Error al guardar: ' + err.message);
-        });
+        .catch(err => alert('Error al guardar: ' + err.message));
 }
 
 // ─────────────────────────────────────────
@@ -130,8 +104,6 @@ function cargarEstados() {
         'Finalizada':  document.getElementById('finalizadas'),
         'Demorada':    document.getElementById('demoradas')
     };
-
-    // Limpiar
     Object.values(contenedores).forEach(c => { if (c) c.innerHTML = ''; });
 
     db.ref('tareas').once('value', snapshot => {
@@ -151,12 +123,65 @@ function cargarEstados() {
                     ${tarea.inicioEst ? '📅 Est: ' + tarea.inicioEst + (tarea.finEst ? ' → ' + tarea.finEst : '') : ''}
                     ${tarea.inicioReal ? '<br>✅ Real: ' + tarea.inicioReal + (tarea.finReal ? ' → ' + tarea.finReal : '') : ''}
                 </small>
-                ${rolActual === 'admin' ? `<br><button class="eliminar" onclick="eliminarTarea('${id}')">Eliminar</button>` : ''}
+                <div class="tarea-acciones">
+                    <button class="editar" onclick="abrirModal('${id}')">Editar</button>
+                    ${rolActual === 'admin' ? `<button class="eliminar" onclick="eliminarTarea('${id}')">Eliminar</button>` : ''}
+                </div>
             `;
             contenedor.appendChild(div);
         });
     });
 }
+
+// ─────────────────────────────────────────
+// MODAL DE EDICIÓN
+// ─────────────────────────────────────────
+function abrirModal(id) {
+    db.ref('tareas/' + id).once('value', snapshot => {
+        const tarea = snapshot.val();
+        if (!tarea) return;
+
+        document.getElementById('modal-titulo').textContent     = `${tarea.equipo} · ${tarea.sector}`;
+        document.getElementById('modal-descripcion').textContent = tarea.descripcion;
+        document.getElementById('modal-inicioReal').value        = tarea.inicioReal || '';
+        document.getElementById('modal-finReal').value           = tarea.finReal    || '';
+        document.getElementById('modal-estado').value            = tarea.estado     || 'Pendiente';
+        document.getElementById('modal-id').value                = id;
+
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    });
+}
+
+function cerrarModal() {
+    document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+function guardarEdicion() {
+    const id         = document.getElementById('modal-id').value;
+    const inicioReal = document.getElementById('modal-inicioReal').value;
+    const finReal    = document.getElementById('modal-finReal').value;
+    const estado     = document.getElementById('modal-estado').value;
+
+    db.ref('tareas/' + id).update({ inicioReal, finReal, estado })
+        .then(() => {
+            cerrarModal();
+            cargarEstados();
+        })
+        .catch(err => alert('Error al guardar: ' + err.message));
+}
+
+// Cerrar modal al hacer click fuera
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', function (e) {
+            if (e.target === this) cerrarModal();
+        });
+    }
+    if (document.getElementById('vista-estados') && !document.getElementById('vista-cargar')) {
+        cargarEstados();
+    }
+});
 
 // ─────────────────────────────────────────
 // ELIMINAR TAREA (solo admin)
@@ -177,7 +202,6 @@ function iniciarCalendario() {
     const el = document.getElementById('calendar');
     if (!el) return;
 
-    // Si ya existe, destruirlo y recrear para refrescar eventos
     if (calendarInstance) {
         calendarInstance.destroy();
         calendarInstance = null;
@@ -194,12 +218,10 @@ function iniciarCalendario() {
                 'Finalizada':  '#27ae60',
                 'Demorada':    '#c0392b'
             };
-
             Object.values(data).forEach(tarea => {
-                const inicio = tarea.inicioEst || tarea.inicioReal;
-                const fin    = tarea.finEst    || tarea.finReal;
+                const inicio = tarea.inicioReal || tarea.inicioEst;
+                const fin    = tarea.finReal    || tarea.finEst;
                 if (!inicio) return;
-
                 eventos.push({
                     title: `${tarea.equipo} · ${tarea.sector}`,
                     start: inicio,
@@ -219,31 +241,12 @@ function iniciarCalendario() {
                 center: 'title',
                 right:  'dayGridMonth,timeGridWeek,listMonth'
             },
-            buttonText: {
-                today:     'Hoy',
-                month:     'Mes',
-                week:      'Semana',
-                list:      'Lista'
-            },
+            buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
             events: eventos,
             eventClick: function(info) {
-                alert(
-                    info.event.title + '\n' +
-                    (info.event.extendedProps.descripcion || '')
-                );
+                alert(info.event.title + '\n' + (info.event.extendedProps.descripcion || ''));
             }
         });
-
         calendarInstance.render();
     });
 }
-
-// ─────────────────────────────────────────
-// INICIALIZACIÓN
-// ─────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    // Cargar estados al inicio en visor (que empieza en vista-estados)
-    if (document.getElementById('vista-estados') && !document.getElementById('vista-cargar')) {
-        cargarEstados();
-    }
-});
