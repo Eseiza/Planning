@@ -3,26 +3,18 @@
 // ─────────────────────────────────────────
 
 const firebaseConfig = {
-
     apiKey: "AIzaSyAJgnFCKt_8TT4BpWrDwqy--Oep0raYA18",
-
     authDomain: "romero-env.firebaseapp.com",
-
     databaseURL: "https://romero-env-default-rtdb.firebaseio.com",
-
     projectId: "romero-env",
-
     storageBucket: "romero-env.firebasestorage.app",
-
     messagingSenderId: "350498956335",
-
     appId: "1:350498956335:web:901f91c4d7b983308252da"
 };
 
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
-
 const db = firebase.database();
 
 
@@ -53,21 +45,11 @@ const USUARIOS = [
 // ROLES
 // ─────────────────────────────────────────
 
-const ROLES = [
-
-    {
-        value: "admin",
-        label: "Admin",
-        icon: "🔑"
-    },
-
-    {
-        value: "visor",
-        label: "Visor",
-        icon: "👁️"
-    }
-
-];
+const ROLES = [{
+        value: "admin", label: "Admin", icon: "🔑"
+    },{
+        value: "visor", label: "Visor", icon: "👁️"
+    }];
 
 let rolSeleccionado = null;
 
