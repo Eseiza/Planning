@@ -32,7 +32,6 @@ body{
     color:var(--texto);
     overflow-x:hidden;
 }
-/* FUNDO */
 .bg-gradient{
     position:fixed;
     inset:0;
@@ -51,7 +50,6 @@ body{
     background-image:
     repeating-linear-gradient(-45deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px,rgba(255,255,255,0.015) 61px);
 }
-/* NAVBAR */
 nav{
     width:100%;
     height:82px;
@@ -120,11 +118,12 @@ nav{
 .nav-right button:hover{
     background:#42281d;
 }
-/* VISTAS */
 .vista{
     padding:35px;
 }
-/* CARD */
+.hidden{
+    display:none !important;
+}
 .card{
     width:100%;
     max-width:720px;
@@ -141,7 +140,6 @@ nav{
     font-size:28px;
     font-weight:700;
 }
-/* INPUTS */
 .card input,
 .card textarea,
 .card select{
@@ -166,7 +164,6 @@ nav{
     border-color:var(--dorado);
     box-shadow:0 0 0 4px rgba(200,150,12,0.12);
 }
-/* LABEL */
 .card label{
     display:block;
     margin-bottom:8px;
@@ -174,7 +171,6 @@ nav{
     font-size:13px;
     font-weight:600;
 }
-/* BOTON */
 .card button{
     width:100%;
     border:none;
@@ -191,7 +187,6 @@ nav{
     transform:translateY(-2px);
     background:var(--dorado-soft);
 }
-/* ESTADOS */
 .estado-container{
     display:grid;
     grid-template-columns:
@@ -209,7 +204,6 @@ nav{
     margin-bottom:20px;
     font-size:20px;
 }
-/* TAREA */
 .tarea{
     background:var(--bg-soft);
     border-radius:18px;
@@ -228,19 +222,35 @@ nav{
 .tarea small{
     color:#999;
 }
-.tarea button{
+.tarea-acciones{
+    display:flex;
+    gap:10px;
     margin-top:14px;
+}
+.tarea-acciones button{
+    flex:1;
     border:none;
     padding:10px 14px;
     border-radius:10px;
     cursor:pointer;
     font-weight:600;
+    font-size:13px;
+    transition:0.2s;
+}
+.editar{
+    background:var(--azul);
+    color:white;
+}
+.editar:hover{
+    background:#3498db;
 }
 .eliminar{
     background:var(--rojo);
     color:white;
 }
-/* CALENDAR */
+.eliminar:hover{
+    background:#e74c3c;
+}
 .calendar-card{
     background:rgba(29,21,16,0.92);
     border:1px solid var(--border);
@@ -249,7 +259,6 @@ nav{
     backdrop-filter:blur(12px);
     height:calc(100vh - 150px);
 }
-/* FULLCALENDAR */
 .fc{
     height:100%;
     color:white;
@@ -275,7 +284,6 @@ nav{
 .fc-daygrid-day{
     background:rgba(255,255,255,0.015);
 }
-/* LOGIN */
 .login-container{
     width:100%;
     max-width:440px;
@@ -354,22 +362,130 @@ nav{
     text-align:center;
     font-weight:600;
 }
-/* RESPONSIVE */
-@media(max-width:900px){
-nav{
-    flex-direction:column;
-    height:auto;
-    padding:20px;
-    gap:20px;
-}
-.nav-center{
-    flex-wrap:wrap;
+/* MODAL */
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.72);
+    backdrop-filter:blur(6px);
+    z-index:1000;
+    display:flex;
+    align-items:center;
     justify-content:center;
-}
-.vista{
     padding:20px;
 }
-.card{
-    padding:25px;
+.modal-overlay.hidden{
+    display:none;
 }
+.modal{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:32px;
+    width:100%;
+    max-width:480px;
+    box-shadow:0 25px 60px rgba(0,0,0,0.5);
+    animation:modalIn 0.25s ease;
+}
+@keyframes modalIn{
+    from{opacity:0;transform:translateY(20px) scale(0.97);}
+    to  {opacity:1;transform:translateY(0)    scale(1);   }
+}
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:10px;
+}
+.modal-header h3{
+    font-size:20px;
+    font-weight:700;
+    color:var(--texto);
+    flex:1;
+    padding-right:16px;
+}
+.modal-cerrar{
+    background:rgba(255,255,255,0.08);
+    border:none;
+    color:var(--texto-soft);
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:0.2s;
+}
+.modal-cerrar:hover{
+    background:rgba(255,255,255,0.15);
+    color:white;
+}
+.modal-desc{
+    color:var(--texto-soft);
+    font-size:14px;
+    margin-bottom:24px;
+    line-height:1.5;
+}
+.modal label{
+    display:block;
+    margin-bottom:8px;
+    color:var(--texto-soft);
+    font-size:13px;
+    font-weight:600;
+}
+.modal input[type="date"],
+.modal select{
+    width:100%;
+    margin-bottom:18px;
+    background:var(--bg-soft);
+    border:1px solid rgba(255,255,255,0.05);
+    border-radius:14px;
+    padding:14px 16px;
+    color:white;
+    font-size:15px;
+    outline:none;
+    transition:0.25s;
+}
+.modal input[type="date"]:focus,
+.modal select:focus{
+    border-color:var(--dorado);
+    box-shadow:0 0 0 4px rgba(200,150,12,0.12);
+}
+.modal button:not(.modal-cerrar){
+    width:100%;
+    border:none;
+    background:var(--dorado);
+    color:#1a1a1a;
+    padding:16px;
+    border-radius:14px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:700;
+    transition:0.25s;
+    margin-top:4px;
+}
+.modal button:not(.modal-cerrar):hover{
+    transform:translateY(-2px);
+    background:var(--dorado-soft);
+}
+@media(max-width:900px){
+    nav{
+        flex-direction:column;
+        height:auto;
+        padding:20px;
+        gap:20px;
+    }
+    .nav-center{
+        flex-wrap:wrap;
+        justify-content:center;
+    }
+    .vista{
+        padding:20px;
+    }
+    .card{
+        padding:25px;
+    }
 }
