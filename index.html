@@ -2,41 +2,35 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planner Obras Romero</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- FONDO -->
     <div class="bg-gradient"></div>
     <div class="bg-lines"></div>
-    <!-- LOGIN -->
-<div class="login-container">
-        <img src="https://www.romeropanificados.com.ar/wp-content/uploads/2023/01/Recurso-8.png"alt="Romero"class="header-icon">
+    <div class="login-container">
+        <img src="https://www.romeropanificados.com.ar/wp-content/uploads/2023/01/Recurso-8.png" alt="Romero" class="header-icon">
         <hr class="divider">
-    <!-- ROLES -->
-<p class="roles-label">Seleccioná tu rol</p>
-    <div class="roles-grid"></div>
-    <!-- FORM -->
-    <form id="loginForm">
-<div class="form-body"id="formBody">
-<div class="form-group">
-    <label>Usuario</label>
-    <input type="text"id="username"required>
-</div>
-<div class="form-group">  
-    <label>Contraseña</label>
-        <input type="password"id="password"required>
-</div>
-    <button type="submit">Iniciar Sesión</button>
-</div>
-</form>
-    <p id="loginMessage"></p>
-</div>
-    <!-- FIREBASE -->
+        <p class="roles-label">Seleccioná tu rol</p>
+        <div class="roles-grid"></div>
+        <form id="loginForm">
+            <div class="form-body" id="formBody">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit">Iniciar Sesión</button>
+            </div>
+        </form>
+        <p id="loginMessage"></p>
+    </div>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <!-- LOGIN -->
     <script src="login.js"></script>
 </body>
 </html>
