@@ -33,22 +33,15 @@
         <button class="sub-tab" onclick="filtrarEstados('En progreso')" id="subProgreso">🔵 En progreso</button>
         <button class="sub-tab" onclick="filtrarEstados('Finalizada')" id="subFinalizada">🟢 Finalizadas</button>
         <button class="sub-tab" onclick="filtrarEstados('Demorada')" id="subDemorada">🔴 Demoradas</button>
-        <button class="sub-tab" onclick="togglePanel('lista')" id="subLista">📋 Lista</button>
+        <button class="sub-tab" onclick="togglePanel('lista')" id="subLista">Lista</button>
         <button class="sub-tab" onclick="togglePanel('notif')" id="subNotif">
             🔔 Notificaciones <span class="badge empty" id="badge-notif">0</span>
         </button>
     </nav>
 
-    <!-- ESTADOS -->
-    <section id="vista-estados" class="vista">
-        <div class="estado-container">
-            <div class="estado-card"><h3>🟡 Pendientes</h3><div id="pendientes"></div></div>
-            <div class="estado-card"><h3>🔵 En progreso</h3><div id="progreso"></div></div>
-            <div class="estado-card"><h3>🟢 Finalizadas</h3><div id="finalizadas"></div></div>
-            <div class="estado-card"><h3>🔴 Demoradas</h3><div id="demoradas"></div></div>
-        </div>
-    </section>
 
+
+    
     <!-- CALENDARIO -->
     <section id="vista-calendario" class="vista hidden">
         <div class="calendar-card">
