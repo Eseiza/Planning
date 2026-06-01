@@ -11,7 +11,8 @@
     <div class="bg-gradient"></div>
     <div class="bg-lines"></div>
 
-    <nav>
+    <!-- NAV PRINCIPAL -->
+    <nav class="nav-main">
         <div class="nav-left">
             <img src="https://www.romeropanificados.com.ar/wp-content/uploads/2023/01/Recurso-8.png" class="nav-logo">
         </div>
@@ -25,25 +26,26 @@
         </div>
     </nav>
 
+    <!-- NAV SECUNDARIO -->
+    <nav class="nav-sub">
+        <button class="sub-tab active" onclick="filtrarEstados('todas')" id="subTodas">Todas</button>
+        <button class="sub-tab" onclick="filtrarEstados('Pendiente')" id="subPendiente">🟡 Pendientes</button>
+        <button class="sub-tab" onclick="filtrarEstados('En progreso')" id="subProgreso">🔵 En progreso</button>
+        <button class="sub-tab" onclick="filtrarEstados('Finalizada')" id="subFinalizada">🟢 Finalizadas</button>
+        <button class="sub-tab" onclick="filtrarEstados('Demorada')" id="subDemorada">🔴 Demoradas</button>
+        <button class="sub-tab" onclick="togglePanel('lista')" id="subLista">📋 Lista</button>
+        <button class="sub-tab" onclick="togglePanel('notif')" id="subNotif">
+            🔔 Notificaciones <span class="badge empty" id="badge-notif">0</span>
+        </button>
+    </nav>
+
     <!-- ESTADOS -->
     <section id="vista-estados" class="vista">
         <div class="estado-container">
-            <div class="estado-card">
-                <h3>🟡 Pendientes</h3>
-                <div id="pendientes"></div>
-            </div>
-            <div class="estado-card">
-                <h3>🔵 En progreso</h3>
-                <div id="progreso"></div>
-            </div>
-            <div class="estado-card">
-                <h3>🟢 Finalizadas</h3>
-                <div id="finalizadas"></div>
-            </div>
-            <div class="estado-card">
-                <h3>🔴 Demoradas</h3>
-                <div id="demoradas"></div>
-            </div>
+            <div class="estado-card"><h3>🟡 Pendientes</h3><div id="pendientes"></div></div>
+            <div class="estado-card"><h3>🔵 En progreso</h3><div id="progreso"></div></div>
+            <div class="estado-card"><h3>🟢 Finalizadas</h3><div id="finalizadas"></div></div>
+            <div class="estado-card"><h3>🔴 Demoradas</h3><div id="demoradas"></div></div>
         </div>
     </section>
 
@@ -53,6 +55,21 @@
             <div id="calendar"></div>
         </div>
     </section>
+
+    <!-- PANEL OVERLAY -->
+    <div id="panel-overlay" class="panel-overlay" style="display:none" onclick="cerrarPaneles()"></div>
+
+    <!-- PANEL LISTA -->
+    <div id="panel-lista" class="panel-dropdown">
+        <div class="panel-header">Todas las tareas <span>más recientes primero</span></div>
+        <div id="panel-lista-body"></div>
+    </div>
+
+    <!-- PANEL NOTIFICACIONES -->
+    <div id="panel-notif" class="panel-dropdown">
+        <div class="panel-header">Próximos 5 días <span>inicio estimado</span></div>
+        <div id="panel-notif-body"></div>
+    </div>
 
     <!-- MODAL EDICIÓN -->
     <div id="modal-overlay" class="modal-overlay hidden">
