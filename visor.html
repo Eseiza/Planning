@@ -54,12 +54,33 @@
         </div>
     </section>
 
-    <!-- FIREBASE -->
+    <!-- MODAL EDICIÓN -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-titulo"></h3>
+                <button class="modal-cerrar" onclick="cerrarModal()">✕</button>
+            </div>
+            <p id="modal-descripcion" class="modal-desc"></p>
+            <input type="hidden" id="modal-id">
+            <label>Inicio real</label>
+            <input type="date" id="modal-inicioReal">
+            <label>Fin real</label>
+            <input type="date" id="modal-finReal">
+            <label>Estado</label>
+            <select id="modal-estado">
+                <option>Pendiente</option>
+                <option>En progreso</option>
+                <option>Finalizada</option>
+                <option>Demorada</option>
+            </select>
+            <button onclick="guardarEdicion()">Guardar cambios</button>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <!-- FULLCALENDAR -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <!-- PLANNER -->
     <script src="planner.js"></script>
 </body>
 </html>
