@@ -144,7 +144,7 @@ function cargarEstados() {
 // GANTT
 // ─────────────────────────────────────────
 function construirGantt() {
-    const inner = document.getElementById('ganttInner');
+    const inner  = document.getElementById('ganttInner');
     const scroll = document.getElementById('ganttScroll');
     if (!inner || !scroll) return;
     inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">Cargando...</div>';
@@ -167,7 +167,7 @@ function construirGantt() {
             return;
         }
 
-        // Rango total
+        // — Rango —
         let minFecha = null, maxFecha = null;
         tareas.forEach(t => {
             const ini = parseDate(t.inicioReal || t.inicioEst);
@@ -175,114 +175,104 @@ function construirGantt() {
             if (!minFecha || ini < minFecha) minFecha = ini;
             if (!maxFecha || fin > maxFecha) maxFecha = fin;
         });
-
-        // Extender rango un poco
         minFecha = startOfMonth(minFecha);
         maxFecha = endOfMonth(maxFecha);
 
-        const totalDias = Math.ceil((maxFecha - minFecha) / 86400000) + 1;
-        const DAY_W    = 32; // px por día
-        const ROW_H    = 48;
-        const LABEL_W  = 220;
-        const MONTH_H  = 32; // fila de meses
-        const DAY_H    = 28; // fila de números de día
-        const HEADER_H = MONTH_H + DAY_H;
-
-        const totalW = LABEL_W + totalDias * DAY_W;
+        const DAY_W   = 34;
+        const LABEL_W = 220;
         const hoy = new Date(); hoy.setHours(0,0,0,0);
 
-        // Construir HTML
-        let html = `<div class="gantt-table" style="width:${totalW}px">`;
-
-        // — HEADER MESES —
-        html += `<div class="gantt-header" style="height:${MONTH_H}px">`;
-        html += `<div class="gantt-label-col" style="width:${LABEL_W}px;height:${MONTH_H}px"></div>`;
-        html += `<div class="gantt-months" style="position:relative;flex:1;height:${MONTH_H}px">`;
-
-        let cur = new Date(minFecha);
+        // — Generar lista de días —
+        const dias = [];
+        const cur = new Date(minFecha);
         while (cur <= maxFecha) {
-            const mesInicio = new Date(cur.getFullYear(), cur.getMonth(), 1);
-            const mesFin    = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
-            const diaIni    = Math.max(0, Math.ceil((mesInicio - minFecha) / 86400000));
-            const diaFin    = Math.min(totalDias - 1, Math.ceil((mesFin - minFecha) / 86400000));
-            const ancho     = (diaFin - diaIni + 1) * DAY_W;
-            const left      = diaIni * DAY_W;
-            const label     = cur.toLocaleDateString('es-AR', { month:'long', year:'numeric' });
-            html += `<div class="gantt-month-label" style="left:${left}px;width:${ancho}px;height:${MONTH_H}px">${label}</div>`;
-            cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+            dias.push(new Date(cur));
+            cur.setDate(cur.getDate() + 1);
         }
-        html += '</div></div>'; // gantt-months, gantt-header (fila meses)
+        const totalDias = dias.length;
+        const trackW = totalDias * DAY_W;
 
-        // — HEADER DÍAS —
-        html += `<div class="gantt-header gantt-days-row" style="height:${DAY_H}px;top:${MONTH_H}px">`;
-        html += `<div class="gantt-label-col" style="width:${LABEL_W}px;height:${DAY_H}px"></div>`;
-        html += `<div class="gantt-months" style="position:relative;flex:1;height:${DAY_H}px">`;
-
-        for (let d = 0; d < totalDias; d++) {
-            const fecha = new Date(minFecha); fecha.setDate(minFecha.getDate() + d);
-            const num   = fecha.getDate();
-            const esHoy = fecha.getTime() === hoy.getTime();
-            const esFin = fecha.getDay() === 0 || fecha.getDay() === 6; // fin de semana
-            html += `<div class="gantt-day-num ${esHoy?'gantt-day-hoy':''} ${esFin?'gantt-day-fin':''}"
-                         style="left:${d*DAY_W}px;width:${DAY_W}px;height:${DAY_H}px">${num}</div>`;
-        }
-        html += '</div></div>'; // días row
-
-        // — GRID VERTICAL (días y meses) —
-        html += `<div class="gantt-grid-lines" style="left:${LABEL_W}px;width:${totalDias*DAY_W}px;top:${HEADER_H}px;height:${tareas.length*ROW_H}px">`;
-        for (let d = 0; d < totalDias; d++) {
-            const fecha = new Date(minFecha); fecha.setDate(minFecha.getDate() + d);
-            const esFin = fecha.getDay() === 0 || fecha.getDay() === 6;
-            const esMes = fecha.getDate() === 1 && d > 0;
-            if (esMes) {
-                html += `<div class="gantt-month-line" style="left:${d*DAY_W}px"></div>`;
+        // — Agrupar días por mes para header —
+        const meses = [];
+        dias.forEach((d, i) => {
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (!meses.length || meses[meses.length-1].key !== key) {
+                meses.push({ key, label: d.toLocaleDateString('es-AR',{month:'long',year:'numeric'}), startIdx: i, count: 1 });
             } else {
-                html += `<div class="gantt-day-line ${esFin?'gantt-day-line-fin':''}" style="left:${d*DAY_W}px"></div>`;
+                meses[meses.length-1].count++;
             }
-        }
-        // Línea de hoy
-        const dHoy = Math.ceil((hoy - minFecha) / 86400000);
-        if (dHoy >= 0 && dHoy <= totalDias) {
-            html += `<div class="gantt-today-line" style="left:${dHoy*DAY_W}px"></div>`;
-        }
-        html += '</div>';
-
-        // — FILAS —
-        const colores = { Pendiente:'#f59e0b', 'En progreso':'#3b82f6', Finalizada:'#22c55e', Demorada:'#ef4444' };
-
-        tareas.forEach((t, i) => {
-            const iniDate = parseDate(t.inicioReal || t.inicioEst);
-            const finDate = parseDate(t.finReal || t.finEst || t.inicioReal || t.inicioEst);
-            const dIni    = Math.ceil((iniDate - minFecha) / 86400000);
-            const dFin    = Math.ceil((finDate - minFecha) / 86400000);
-            const barW    = Math.max((dFin - dIni + 1) * DAY_W, DAY_W);
-            const barL    = dIni * DAY_W;
-            const color   = colores[t.estado] || '#888';
-            const esReal  = !!(t.inicioReal);
-            const top     = i * ROW_H;
-
-            html += `
-            <div class="gantt-row" style="top:${HEADER_H + top}px;height:${ROW_H}px"
-                 data-top="${HEADER_H + top}">
-                <div class="gantt-row-label" style="width:${LABEL_W}px">
-                    <span class="gantt-dot" style="background:${color}"></span>
-                    <span class="gantt-row-text">${t.equipo} · ${t.sector}</span>
-                </div>
-                <div class="gantt-row-track" style="width:${totalDias*DAY_W}px">
-                    <div class="gantt-bar ${esReal?'gantt-bar-real':''}"
-                         style="left:${barL}px;width:${barW}px;background:${color}"
-                         onclick="abrirModal('${t.id}')"
-                         title="${t.equipo} · ${t.sector}&#10;${t.descripcion}&#10;${esReal?'Real':'Est'}: ${formatFecha(t.inicioReal||t.inicioEst)} → ${formatFecha(t.finReal||t.finEst||t.inicioReal||t.inicioEst)}">
-                        <span class="gantt-bar-label">${t.equipo}</span>
-                    </div>
-                </div>
-            </div>`;
         });
 
-        html += '</div>'; // gantt-table
-        inner.innerHTML = html;
+        const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6',Finalizada:'#22c55e',Demorada:'#ef4444' };
 
-        // Scroll táctil / mouse drag
+        // — Construir tabla —
+        // Usamos display:table para que el sticky funcione bien
+        let html = `<div class="gt-wrap" style="min-width:${LABEL_W + trackW}px">`;
+
+        // FILA MESES
+        html += `<div class="gt-row gt-head-row">`;
+        html += `<div class="gt-cell gt-label-cell gt-head-cell" style="width:${LABEL_W}px;min-width:${LABEL_W}px"></div>`;
+        html += `<div class="gt-track" style="width:${trackW}px">`;
+        meses.forEach(m => {
+            html += `<div class="gt-month-cell" style="width:${m.count*DAY_W}px">${m.label}</div>`;
+        });
+        html += `</div></div>`;
+
+        // FILA DÍAS
+        html += `<div class="gt-row gt-days-row">`;
+        html += `<div class="gt-cell gt-label-cell gt-days-head" style="width:${LABEL_W}px;min-width:${LABEL_W}px"></div>`;
+        html += `<div class="gt-track" style="width:${trackW}px">`;
+        dias.forEach(d => {
+            const esHoy = d.getTime() === hoy.getTime();
+            const esFin = d.getDay()===0 || d.getDay()===6;
+            html += `<div class="gt-day-cell${esHoy?' gt-hoy':''}${esFin?' gt-finde':''}" style="width:${DAY_W}px">${d.getDate()}</div>`;
+        });
+        html += `</div></div>`;
+
+        // FILAS TAREAS
+        tareas.forEach(t => {
+            const ini   = parseDate(t.inicioReal || t.inicioEst);
+            const fin   = parseDate(t.finReal || t.finEst || t.inicioReal || t.inicioEst);
+            const dIni  = Math.round((ini - minFecha) / 86400000);
+            const dFin  = Math.round((fin - minFecha) / 86400000);
+            const barL  = dIni * DAY_W;
+            const barW  = Math.max((dFin - dIni + 1) * DAY_W, DAY_W);
+            const color = colores[t.estado] || '#888';
+            const esReal = !!t.inicioReal;
+
+            html += `<div class="gt-row gt-task-row">`;
+            html += `<div class="gt-cell gt-label-cell" style="width:${LABEL_W}px;min-width:${LABEL_W}px">
+                        <span class="gantt-dot" style="background:${color}"></span>
+                        <span class="gt-label-text">${t.equipo} · ${t.sector}</span>
+                     </div>`;
+            html += `<div class="gt-track" style="width:${trackW}px;position:relative">`;
+
+            // Columnas de día (fondo)
+            dias.forEach((d, i) => {
+                const esFin = d.getDay()===0 || d.getDay()===6;
+                const esMes = d.getDate()===1 && i>0;
+                html += `<div class="gt-col${esFin?' gt-col-fin':''}${esMes?' gt-col-mes':''}" style="left:${i*DAY_W}px;width:${DAY_W}px"></div>`;
+            });
+
+            // Línea de hoy
+            const dHoy = Math.round((hoy - minFecha) / 86400000);
+            if (dHoy >= 0 && dHoy < totalDias) {
+                html += `<div class="gt-hoy-line" style="left:${dHoy*DAY_W}px"></div>`;
+            }
+
+            // Barra
+            html += `<div class="gt-bar${esReal?' gt-bar-real':''}"
+                          style="left:${barL}px;width:${barW}px;background:${color}"
+                          onclick="abrirModal('${t.id}')"
+                          title="${t.equipo} · ${t.sector}\n${t.descripcion}\n${esReal?'Real':'Est'}: ${formatFecha(t.inicioReal||t.inicioEst)} → ${formatFecha(t.finReal||t.finEst||t.inicioReal||t.inicioEst)}">
+                        <span class="gt-bar-label">${t.equipo}</span>
+                     </div>`;
+
+            html += `</div></div>`;
+        });
+
+        html += `</div>`; // gt-wrap
+        inner.innerHTML = html;
         initGanttDrag(scroll);
     });
 }
