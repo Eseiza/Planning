@@ -14,7 +14,7 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ─────────────────────────────────────────
-// AUTH GUARD
+// AUTH
 // ─────────────────────────────────────────
 const autenticado   = sessionStorage.getItem('autenticado');
 const rolActual     = sessionStorage.getItem('rol');
@@ -24,9 +24,6 @@ if (!autenticado) window.location.href = './index.html';
 const spanUsuario = document.getElementById('usuarioActual');
 if (spanUsuario) spanUsuario.textContent = usuarioNombre || '';
 
-// ─────────────────────────────────────────
-// LOGOUT
-// ─────────────────────────────────────────
 function logout() {
     sessionStorage.clear();
     window.location.href = './index.html';
@@ -42,12 +39,16 @@ function mostrarVista(nombre) {
     const vista = document.getElementById('vista-' + nombre);
     if (vista) vista.classList.remove('hidden');
 
-    const btnMap = { 'cargar': 'btnCarga', 'estados': 'btnEstados', 'calendario': 'btnCalendario' };
+    const btnMap = { cargar:'btnCarga', estados:'btnEstados', calendario:'btnCalendario' };
     const btn = document.getElementById(btnMap[nombre]);
     if (btn) btn.classList.add('active');
 
-    if (nombre === 'calendario') setTimeout(iniciarCalendario, 100);
+    // Nav secundario solo en estados
+    const navSub = document.getElementById('navSub');
+    if (navSub) navSub.classList.toggle('hidden', nombre !== 'estados');
+
     if (nombre === 'estados')    { filtroActivo = 'todas'; cargarEstados(); }
+    if (nombre === 'calendario') setTimeout(construirGantt, 80);
 
     cerrarPaneles();
 }
@@ -67,15 +68,14 @@ function guardarTarea() {
         alert('Completá al menos sector, equipo y descripción.');
         return;
     }
-
     db.ref('tareas').push({
         sector, equipo, descripcion,
-        inicioEst: inicioEst || '', finEst: finEst || '',
-        inicioReal: '', finReal: '',
+        inicioEst: inicioEst||'', finEst: finEst||'',
+        inicioReal:'', finReal:'',
         estado, creadoPor: usuarioNombre, timestamp: Date.now()
     })
     .then(() => {
-        alert('Tarea guardada correctamente.');
+        alert('Tarea guardada.');
         ['sector','equipo','descripcion','inicioEst','finEst'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
@@ -87,30 +87,19 @@ function guardarTarea() {
 }
 
 // ─────────────────────────────────────────
-// FILTRO DEL SUB-NAV
+// FILTRO ESTADOS
 // ─────────────────────────────────────────
 let filtroActivo = 'todas';
 
 function filtrarEstados(filtro) {
     filtroActivo = filtro;
     document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
-    const tabId = {
-        'todas':         'subTodas',
-        'Pendiente':     'subPendiente',
-        'En progreso':   'subProgreso',
-        'Finalizada':    'subFinalizada',
-        'Demorada':      'subDemorada'
-    };
-    const el = document.getElementById(tabId[filtro]);
+    const tabMap = { todas:'subTodas', Pendiente:'subPendiente', 'En progreso':'subProgreso', Finalizada:'subFinalizada', Demorada:'subDemorada' };
+    const el = document.getElementById(tabMap[filtro]);
     if (el) el.classList.add('active');
-
-    cerrarPaneles();
-    mostrarVista('estados');
+    cargarEstados();
 }
 
-// ─────────────────────────────────────────
-// CARGAR ESTADOS
-// ─────────────────────────────────────────
 function cargarEstados() {
     const contenedores = {
         'Pendiente':   document.getElementById('pendientes'),
@@ -120,66 +109,222 @@ function cargarEstados() {
     };
     Object.values(contenedores).forEach(c => { if (c) c.innerHTML = ''; });
 
-    // Mostrar/ocultar columnas según filtro
-    const estadoCards = document.querySelectorAll('.estado-card');
-    estadoCards.forEach(card => {
-        if (filtroActivo === 'todas') {
-            card.style.display = '';
-        } else {
-            const titulo = card.querySelector('h3')?.textContent || '';
-            const mapa = {
-                'Pendiente': 'Pendientes',
-                'En progreso': 'En progreso',
-                'Finalizada': 'Finalizadas',
-                'Demorada': 'Demoradas'
-            };
-            card.style.display = titulo.includes(mapa[filtroActivo]) ? '' : 'none';
-        }
+    document.querySelectorAll('.estado-card').forEach(card => {
+        if (filtroActivo === 'todas') { card.style.display = ''; return; }
+        const mapa = { Pendiente:'Pendientes', 'En progreso':'En progreso', Finalizada:'Finalizadas', Demorada:'Demoradas' };
+        card.style.display = card.querySelector('h3')?.textContent.includes(mapa[filtroActivo]) ? '' : 'none';
     });
 
     db.ref('tareas').once('value', snapshot => {
         const data = snapshot.val();
         if (!data) return;
-
         Object.entries(data).forEach(([id, tarea]) => {
             if (filtroActivo !== 'todas' && tarea.estado !== filtroActivo) return;
-            const contenedor = contenedores[tarea.estado];
-            if (!contenedor) return;
-
+            const cont = contenedores[tarea.estado];
+            if (!cont) return;
             const div = document.createElement('div');
             div.className = 'tarea';
             div.innerHTML = `
                 <h4>${tarea.equipo} · ${tarea.sector}</h4>
                 <p>${tarea.descripcion}</p>
                 <small>
-                    ${tarea.inicioEst ? '📅 Est: ' + formatFecha(tarea.inicioEst) + (tarea.finEst ? ' → ' + formatFecha(tarea.finEst) : '') : ''}
-                    ${tarea.inicioReal ? '<br>✅ Real: ' + formatFecha(tarea.inicioReal) + (tarea.finReal ? ' → ' + formatFecha(tarea.finReal) : '') : ''}
+                    ${tarea.inicioEst ? '📅 Est: '+formatFecha(tarea.inicioEst)+(tarea.finEst?' → '+formatFecha(tarea.finEst):'') : ''}
+                    ${tarea.inicioReal ? '<br>✅ Real: '+formatFecha(tarea.inicioReal)+(tarea.finReal?' → '+formatFecha(tarea.finReal):'') : ''}
                 </small>
                 <div class="tarea-acciones">
                     <button class="editar" onclick="abrirModal('${id}')">Editar</button>
-                    ${rolActual === 'admin' ? `<button class="eliminar" onclick="eliminarTarea('${id}')">Eliminar</button>` : ''}
-                </div>
-            `;
-            contenedor.appendChild(div);
+                    ${rolActual==='admin' ? `<button class="eliminar" onclick="eliminarTarea('${id}')">Eliminar</button>` : ''}
+                </div>`;
+            cont.appendChild(div);
         });
     });
 }
 
 // ─────────────────────────────────────────
-// PANEL LISTA (dropdown desde sub-nav)
+// GANTT
+// ─────────────────────────────────────────
+function construirGantt() {
+    const inner = document.getElementById('ganttInner');
+    const scroll = document.getElementById('ganttScroll');
+    if (!inner || !scroll) return;
+    inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">Cargando...</div>';
+
+    db.ref('tareas').once('value', snapshot => {
+        const data = snapshot.val();
+        inner.innerHTML = '';
+
+        if (!data) {
+            inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">No hay tareas cargadas.</div>';
+            return;
+        }
+
+        const tareas = Object.entries(data)
+            .map(([id, t]) => ({ id, ...t }))
+            .filter(t => t.inicioReal || t.inicioEst);
+
+        if (!tareas.length) {
+            inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">No hay tareas con fechas.</div>';
+            return;
+        }
+
+        // Rango total
+        let minFecha = null, maxFecha = null;
+        tareas.forEach(t => {
+            const ini = parseDate(t.inicioReal || t.inicioEst);
+            const fin = parseDate(t.finReal || t.finEst || t.inicioReal || t.inicioEst);
+            if (!minFecha || ini < minFecha) minFecha = ini;
+            if (!maxFecha || fin > maxFecha) maxFecha = fin;
+        });
+
+        // Extender rango un poco
+        minFecha = startOfMonth(minFecha);
+        maxFecha = endOfMonth(maxFecha);
+
+        const totalDias = Math.ceil((maxFecha - minFecha) / 86400000) + 1;
+        const DAY_W = 28; // px por día
+        const ROW_H = 48;
+        const LABEL_W = 220;
+        const HEADER_H = 56;
+
+        const totalW = LABEL_W + totalDias * DAY_W;
+
+        // Construir HTML
+        let html = `<div class="gantt-table" style="width:${totalW}px">`;
+
+        // — HEADER MESES —
+        html += `<div class="gantt-header" style="height:${HEADER_H}px">`;
+        html += `<div class="gantt-label-col" style="width:${LABEL_W}px;height:${HEADER_H}px"></div>`;
+        html += `<div class="gantt-months" style="position:relative;flex:1;height:${HEADER_H}px">`;
+
+        let cur = new Date(minFecha);
+        while (cur <= maxFecha) {
+            const mesInicio = new Date(cur.getFullYear(), cur.getMonth(), 1);
+            const mesFin    = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
+            const diaIni    = Math.max(0, Math.ceil((mesInicio - minFecha) / 86400000));
+            const diaFin    = Math.min(totalDias - 1, Math.ceil((mesFin - minFecha) / 86400000));
+            const ancho     = (diaFin - diaIni + 1) * DAY_W;
+            const left      = diaIni * DAY_W;
+            const label     = cur.toLocaleDateString('es-AR', { month:'long', year:'numeric' });
+
+            html += `<div class="gantt-month-label" style="left:${left}px;width:${ancho}px;height:${HEADER_H}px">${label}</div>`;
+            cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+        }
+        html += '</div></div>'; // gantt-months, gantt-header
+
+        // — LÍNEAS DE MES (grid vertical) —
+        html += `<div class="gantt-grid-lines" style="left:${LABEL_W}px;width:${totalDias*DAY_W}px;top:${HEADER_H}px;height:${tareas.length*ROW_H}px">`;
+        let curLine = new Date(minFecha);
+        while (curLine <= maxFecha) {
+            const d = Math.ceil((curLine - minFecha) / 86400000);
+            if (curLine.getDate() === 1 && d > 0) {
+                html += `<div class="gantt-month-line" style="left:${d*DAY_W}px"></div>`;
+            }
+            curLine.setDate(curLine.getDate() + 1);
+        }
+        // Línea de hoy
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        const dHoy = Math.ceil((hoy - minFecha) / 86400000);
+        if (dHoy >= 0 && dHoy <= totalDias) {
+            html += `<div class="gantt-today-line" style="left:${dHoy*DAY_W}px"></div>`;
+        }
+        html += '</div>';
+
+        // — FILAS —
+        const colores = { Pendiente:'#f59e0b', 'En progreso':'#3b82f6', Finalizada:'#22c55e', Demorada:'#ef4444' };
+
+        tareas.forEach((t, i) => {
+            const iniDate = parseDate(t.inicioReal || t.inicioEst);
+            const finDate = parseDate(t.finReal || t.finEst || t.inicioReal || t.inicioEst);
+            const dIni    = Math.ceil((iniDate - minFecha) / 86400000);
+            const dFin    = Math.ceil((finDate - minFecha) / 86400000);
+            const barW    = Math.max((dFin - dIni + 1) * DAY_W, DAY_W);
+            const barL    = dIni * DAY_W;
+            const color   = colores[t.estado] || '#888';
+            const esReal  = !!(t.inicioReal);
+            const top     = i * ROW_H;
+
+            html += `
+            <div class="gantt-row" style="top:${HEADER_H + top}px;height:${ROW_H}px">
+                <div class="gantt-row-label" style="width:${LABEL_W}px">
+                    <span class="gantt-dot" style="background:${color}"></span>
+                    <span class="gantt-row-text">${t.equipo} · ${t.sector}</span>
+                </div>
+                <div class="gantt-row-track" style="width:${totalDias*DAY_W}px">
+                    <div class="gantt-bar ${esReal?'gantt-bar-real':''}"
+                         style="left:${barL}px;width:${barW}px;background:${color}"
+                         onclick="abrirModal('${t.id}')"
+                         title="${t.equipo} · ${t.sector}&#10;${t.descripcion}&#10;${esReal?'Real':'Est'}: ${formatFecha(t.inicioReal||t.inicioEst)} → ${formatFecha(t.finReal||t.finEst||t.inicioReal||t.inicioEst)}">
+                        <span class="gantt-bar-label">${t.equipo}</span>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        html += '</div>'; // gantt-table
+        inner.innerHTML = html;
+
+        // Scroll táctil / mouse drag
+        initGanttDrag(scroll);
+    });
+}
+
+function initGanttDrag(el) {
+    let isDown = false, startX, startY, scrollLeft, scrollTop;
+
+    el.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('gantt-bar')) return;
+        isDown = true;
+        el.classList.add('grabbing');
+        startX = e.pageX - el.offsetLeft;
+        startY = e.pageY - el.offsetTop;
+        scrollLeft = el.scrollLeft;
+        scrollTop  = el.scrollTop;
+    });
+    el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('grabbing'); });
+    el.addEventListener('mouseup',    () => { isDown = false; el.classList.remove('grabbing'); });
+    el.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        e.preventDefault();
+        el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
+        el.scrollTop  = scrollTop  - (e.pageY - el.offsetTop  - startY);
+    });
+
+    // Touch
+    let tx, ty, tsl, tst;
+    el.addEventListener('touchstart', e => {
+        tx  = e.touches[0].pageX;
+        ty  = e.touches[0].pageY;
+        tsl = el.scrollLeft;
+        tst = el.scrollTop;
+    }, { passive:true });
+    el.addEventListener('touchmove', e => {
+        el.scrollLeft = tsl - (e.touches[0].pageX - tx);
+        el.scrollTop  = tst - (e.touches[0].pageY - ty);
+    }, { passive:true });
+}
+
+function parseDate(str) {
+    if (!str) return new Date();
+    const [y,m,d] = str.split('-').map(Number);
+    return new Date(y, m-1, d);
+}
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d)   { return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+// ─────────────────────────────────────────
+// PANELES FLOTANTES
 // ─────────────────────────────────────────
 function togglePanel(tipo) {
-    const panel = document.getElementById('panel-' + tipo);
+    const panel   = document.getElementById('panel-' + tipo);
     const overlay = document.getElementById('panel-overlay');
     if (!panel) return;
-
-    const estaAbierto = panel.classList.contains('open');
+    const abierto = panel.classList.contains('open');
     cerrarPaneles();
-    if (!estaAbierto) {
+    if (!abierto) {
         panel.classList.add('open');
         if (overlay) overlay.style.display = 'block';
-        if (tipo === 'lista')  cargarPanelLista();
-        if (tipo === 'notif')  cargarPanelNotif();
+        if (tipo === 'lista') cargarPanelLista();
+        if (tipo === 'notif') cargarPanelNotif();
     }
 }
 
@@ -189,104 +334,62 @@ function cerrarPaneles() {
     if (overlay) overlay.style.display = 'none';
 }
 
-// ─────────────────────────────────────────
-// PANEL: LISTA DE TAREAS
-// ─────────────────────────────────────────
 function cargarPanelLista() {
-    const contenido = document.getElementById('panel-lista-body');
-    if (!contenido) return;
-    contenido.innerHTML = '<div class="panel-empty">Cargando...</div>';
-
+    const body = document.getElementById('panel-lista-body');
+    if (!body) return;
+    body.innerHTML = '<div class="panel-empty">Cargando...</div>';
+    const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6', Finalizada:'#22c55e', Demorada:'#ef4444' };
     db.ref('tareas').once('value', snapshot => {
         const data = snapshot.val();
-        contenido.innerHTML = '';
-
-        if (!data) {
-            contenido.innerHTML = '<div class="panel-empty">No hay tareas cargadas.</div>';
-            return;
-        }
-
-        const colores = {
-            'Pendiente':   '#f59e0b',
-            'En progreso': '#3b82f6',
-            'Finalizada':  '#22c55e',
-            'Demorada':    '#ef4444'
-        };
-
-        Object.values(data).sort((a,b) => (b.timestamp||0) - (a.timestamp||0)).forEach(tarea => {
+        body.innerHTML = '';
+        if (!data) { body.innerHTML = '<div class="panel-empty">No hay tareas.</div>'; return; }
+        Object.values(data).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(t => {
             const item = document.createElement('div');
             item.className = 'panel-item';
             item.innerHTML = `
-                <div class="panel-item-titulo">${tarea.equipo} · ${tarea.sector}</div>
-                <div class="panel-item-desc">${tarea.descripcion}</div>
+                <div class="panel-item-titulo">${t.equipo} · ${t.sector}</div>
+                <div class="panel-item-desc">${t.descripcion}</div>
                 <div class="panel-item-meta">
-                    <span class="panel-estado-dot" style="background:${colores[tarea.estado]||'#888'}"></span>
-                    <span style="font-size:12px;color:var(--texto-soft);font-weight:600">${tarea.estado}</span>
-                    ${tarea.inicioEst ? `<span class="panel-item-fecha">📅 ${formatFecha(tarea.inicioEst)}${tarea.finEst ? ' → '+formatFecha(tarea.finEst):''}</span>` : ''}
-                </div>
-            `;
-            contenido.appendChild(item);
+                    <span class="panel-estado-dot" style="background:${colores[t.estado]||'#888'}"></span>
+                    <span style="font-size:12px;color:var(--texto-soft);font-weight:600">${t.estado}</span>
+                    ${t.inicioEst?`<span class="panel-item-fecha">📅 ${formatFecha(t.inicioEst)}${t.finEst?' → '+formatFecha(t.finEst):''}</span>`:''}
+                </div>`;
+            body.appendChild(item);
         });
     });
 }
 
-// ─────────────────────────────────────────
-// PANEL: NOTIFICACIONES (próximos 5 días)
-// ─────────────────────────────────────────
 function cargarPanelNotif() {
-    const contenido = document.getElementById('panel-notif-body');
-    if (!contenido) return;
-    contenido.innerHTML = '<div class="panel-empty">Cargando...</div>';
-
+    const body = document.getElementById('panel-notif-body');
+    if (!body) return;
+    body.innerHTML = '<div class="panel-empty">Cargando...</div>';
     const hoy    = new Date(); hoy.setHours(0,0,0,0);
-    const limite = new Date(hoy); limite.setDate(hoy.getDate() + 5);
-
+    const limite = new Date(hoy); limite.setDate(hoy.getDate()+5);
+    const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6', Finalizada:'#22c55e', Demorada:'#ef4444' };
     db.ref('tareas').once('value', snapshot => {
         const data = snapshot.val();
-        contenido.innerHTML = '';
-
-        if (!data) {
-            contenido.innerHTML = '<div class="panel-empty">No hay notificaciones.</div>';
-            return;
-        }
-
+        body.innerHTML = '';
+        if (!data) { body.innerHTML = '<div class="panel-empty">Sin notificaciones.</div>'; return; }
         const proximas = Object.values(data).filter(t => {
             if (!t.inicioEst) return false;
-            const fecha = new Date(t.inicioEst + 'T00:00:00');
-            return fecha >= hoy && fecha <= limite;
-        }).sort((a,b) => new Date(a.inicioEst) - new Date(b.inicioEst));
-
-        if (!proximas.length) {
-            contenido.innerHTML = '<div class="panel-empty">Sin tareas en los próximos 5 días.</div>';
-            return;
-        }
-
-        const colores = {
-            'Pendiente':   '#f59e0b',
-            'En progreso': '#3b82f6',
-            'Finalizada':  '#22c55e',
-            'Demorada':    '#ef4444'
-        };
-
-        proximas.forEach(tarea => {
-            const fechaInicio = new Date(tarea.inicioEst + 'T00:00:00');
-            const diffDias = Math.round((fechaInicio - hoy) / 86400000);
-            const cuandoLabel = diffDias === 0 ? '🔴 Hoy'
-                              : diffDias === 1 ? '🟠 Mañana'
-                              : `🟡 En ${diffDias} días`;
-
+            const f = parseDate(t.inicioEst);
+            return f >= hoy && f <= limite;
+        }).sort((a,b) => parseDate(a.inicioEst)-parseDate(b.inicioEst));
+        if (!proximas.length) { body.innerHTML = '<div class="panel-empty">Sin tareas en los próximos 5 días.</div>'; return; }
+        proximas.forEach(t => {
+            const diff = Math.round((parseDate(t.inicioEst)-hoy)/86400000);
+            const label = diff===0?'🔴 Hoy':diff===1?'🟠 Mañana':`🟡 En ${diff} días`;
             const item = document.createElement('div');
             item.className = 'panel-item';
             item.innerHTML = `
-                <div class="panel-item-titulo">${tarea.equipo} · ${tarea.sector}</div>
-                <div class="panel-item-desc">${tarea.descripcion}</div>
+                <div class="panel-item-titulo">${t.equipo} · ${t.sector}</div>
+                <div class="panel-item-desc">${t.descripcion}</div>
                 <div class="panel-item-meta">
-                    <span class="panel-estado-dot" style="background:${colores[tarea.estado]||'#888'}"></span>
-                    <span style="font-size:12px;color:var(--texto-soft);font-weight:600">${tarea.estado}</span>
-                    <span class="panel-item-fecha">${cuandoLabel} · ${formatFecha(tarea.inicioEst)}</span>
-                </div>
-            `;
-            contenido.appendChild(item);
+                    <span class="panel-estado-dot" style="background:${colores[t.estado]||'#888'}"></span>
+                    <span style="font-size:12px;color:var(--texto-soft);font-weight:600">${t.estado}</span>
+                    <span class="panel-item-fecha">${label} · ${formatFecha(t.inicioEst)}</span>
+                </div>`;
+            body.appendChild(item);
         });
     });
 }
@@ -294,22 +397,18 @@ function cargarPanelNotif() {
 function actualizarBadgeNotif() {
     const badge = document.getElementById('badge-notif');
     if (!badge) return;
-
     const hoy    = new Date(); hoy.setHours(0,0,0,0);
-    const limite = new Date(hoy); limite.setDate(hoy.getDate() + 5);
-
+    const limite = new Date(hoy); limite.setDate(hoy.getDate()+5);
     db.ref('tareas').once('value', snapshot => {
         const data = snapshot.val();
-        if (!data) { badge.textContent = '0'; badge.classList.add('empty'); return; }
-
+        if (!data) { badge.textContent='0'; badge.classList.add('empty'); return; }
         const count = Object.values(data).filter(t => {
             if (!t.inicioEst) return false;
-            const fecha = new Date(t.inicioEst + 'T00:00:00');
-            return fecha >= hoy && fecha <= limite;
+            const f = parseDate(t.inicioEst);
+            return f >= hoy && f <= limite;
         }).length;
-
         badge.textContent = count;
-        count > 0 ? badge.classList.remove('empty') : badge.classList.add('empty');
+        count>0 ? badge.classList.remove('empty') : badge.classList.add('empty');
     });
 }
 
@@ -317,81 +416,34 @@ function actualizarBadgeNotif() {
 // MODAL EDICIÓN
 // ─────────────────────────────────────────
 function abrirModal(id) {
-    db.ref('tareas/' + id).once('value', snapshot => {
-        const tarea = snapshot.val();
-        if (!tarea) return;
-        document.getElementById('modal-titulo').textContent      = `${tarea.equipo} · ${tarea.sector}`;
-        document.getElementById('modal-descripcion').textContent = tarea.descripcion;
-        document.getElementById('modal-inicioReal').value        = tarea.inicioReal || '';
-        document.getElementById('modal-finReal').value           = tarea.finReal    || '';
-        document.getElementById('modal-estado').value            = tarea.estado     || 'Pendiente';
+    db.ref('tareas/'+id).once('value', snapshot => {
+        const t = snapshot.val();
+        if (!t) return;
+        document.getElementById('modal-titulo').textContent      = `${t.equipo} · ${t.sector}`;
+        document.getElementById('modal-descripcion').textContent = t.descripcion;
+        document.getElementById('modal-inicioReal').value        = t.inicioReal||'';
+        document.getElementById('modal-finReal').value           = t.finReal||'';
+        document.getElementById('modal-estado').value            = t.estado||'Pendiente';
         document.getElementById('modal-id').value                = id;
         document.getElementById('modal-overlay').classList.remove('hidden');
     });
 }
-
-function cerrarModal() {
-    document.getElementById('modal-overlay').classList.add('hidden');
-}
-
+function cerrarModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 function guardarEdicion() {
     const id         = document.getElementById('modal-id').value;
     const inicioReal = document.getElementById('modal-inicioReal').value;
     const finReal    = document.getElementById('modal-finReal').value;
     const estado     = document.getElementById('modal-estado').value;
-
-    db.ref('tareas/' + id).update({ inicioReal, finReal, estado })
-        .then(() => { cerrarModal(); cargarEstados(); actualizarBadgeNotif(); })
-        .catch(err => alert('Error: ' + err.message));
+    db.ref('tareas/'+id).update({ inicioReal, finReal, estado })
+        .then(() => { cerrarModal(); cargarEstados(); actualizarBadgeNotif(); construirGantt(); })
+        .catch(err => alert('Error: '+err.message));
 }
 
-// ─────────────────────────────────────────
-// ELIMINAR
-// ─────────────────────────────────────────
 function eliminarTarea(id) {
     if (!confirm('¿Eliminar esta tarea?')) return;
-    db.ref('tareas/' + id).remove()
+    db.ref('tareas/'+id).remove()
         .then(() => { cargarEstados(); actualizarBadgeNotif(); })
-        .catch(err => alert('Error: ' + err.message));
-}
-
-// ─────────────────────────────────────────
-// CALENDARIO
-// ─────────────────────────────────────────
-let calendarInstance = null;
-function iniciarCalendario() {
-    const el = document.getElementById('calendar');
-    if (!el) return;
-    if (calendarInstance) { calendarInstance.destroy(); calendarInstance = null; }
-
-    db.ref('tareas').once('value', snapshot => {
-        const data = snapshot.val();
-        const eventos = [];
-        const colores = { 'Pendiente':'#f59e0b','En progreso':'#3b82f6','Finalizada':'#22c55e','Demorada':'#ef4444' };
-
-        if (data) {
-            Object.values(data).forEach(tarea => {
-                const inicio = tarea.inicioReal || tarea.inicioEst;
-                const fin    = tarea.finReal    || tarea.finEst;
-                if (!inicio) return;
-                eventos.push({
-                    title: `${tarea.equipo} · ${tarea.sector}`,
-                    start: inicio, end: fin || inicio,
-                    color: colores[tarea.estado] || '#888',
-                    extendedProps: { descripcion: tarea.descripcion }
-                });
-            });
-        }
-
-        calendarInstance = new FullCalendar.Calendar(el, {
-            initialView: 'dayGridMonth', locale: 'es', height: '100%',
-            headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,listMonth' },
-            buttonText: { today:'Hoy', month:'Mes', week:'Semana', list:'Lista' },
-            events: eventos,
-            eventClick: info => alert(info.event.title + '\n' + (info.event.extendedProps.descripcion||''))
-        });
-        calendarInstance.render();
-    });
+        .catch(err => alert('Error: '+err.message));
 }
 
 // ─────────────────────────────────────────
@@ -407,13 +459,10 @@ function formatFecha(str) {
 // INIT
 // ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    // Cerrar modal al click fuera
     const overlay = document.getElementById('modal-overlay');
-    if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
-
-    // Badge notificaciones al cargar
+    if (overlay) overlay.addEventListener('click', e => { if (e.target===overlay) cerrarModal(); });
     actualizarBadgeNotif();
-
-    // Visor arranca en estados
-    if (!document.getElementById('vista-cargar')) cargarEstados();
+    if (!document.getElementById('vista-cargar')) {
+        mostrarVista('estados');
+    }
 });
