@@ -328,7 +328,7 @@ function toggleGanttFS() {
         if (screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
         }
-        if (btn) btn.innerHTML = '⛶ Pantalla Completa';
+        if (btn) btn.innerHTML = '⛶ Pantalla completa';
     }
 }
 
@@ -338,7 +338,7 @@ function _syncFsBtn() {
     const btn = document.getElementById('ganttFsBtn');
     if (!btn) return;
     const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    btn.innerHTML = isFS ?  '⛶ Pantalla Completa';
+    btn.innerHTML = isFS ? '✕ Salir' : '⛶ Pantalla completa';
 }
 
 // ─────────────────────────────────────────
