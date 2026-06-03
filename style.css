@@ -146,102 +146,100 @@ nav.nav-sub{
 }
 .gantt-scroll{
     width:100%; height:100%;
-    overflow:auto; cursor:grab;
-    position:relative;
+    overflow:auto; cursor:grab; user-select:none;
 }
 .gantt-scroll.grabbing{ cursor:grabbing; }
-.gantt-scroll::-webkit-scrollbar{ height:8px; width:8px; }
-.gantt-scroll::-webkit-scrollbar-track{ background:rgba(255,255,255,0.04); }
-.gantt-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.15); border-radius:4px; }
-.gantt-table{ position:relative; user-select:none; }
-.gantt-header{
-    display:flex; position:sticky; top:0; z-index:10;
-    background:var(--bg-card); border-bottom:1px solid var(--border);
+.gantt-scroll::-webkit-scrollbar{ height:7px; width:7px; }
+.gantt-scroll::-webkit-scrollbar-track{ background:rgba(255,255,255,0.03); }
+.gantt-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.14); border-radius:4px; }
+
+/* Contenedor principal — filas apiladas verticalmente */
+.gt-wrap{ display:flex; flex-direction:column; }
+
+/* Cada fila = label sticky + track scrollable */
+.gt-row{
+    display:flex; flex-direction:row;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    min-height:44px;
 }
-.gantt-label-col{
-    flex-shrink:0; background:var(--bg-card);
-    border-right:1px solid var(--border);
-    position:sticky; left:0; z-index:11;
-}
-.gantt-months{ position:relative; }
-.gantt-month-label{
-    position:absolute; top:0;
-    display:flex; align-items:center; justify-content:center;
-    font-size:12.5px; font-weight:700; color:var(--texto-soft);
-    text-transform:capitalize; letter-spacing:0.3px;
-    border-right:1px solid var(--border);
-    padding:0 12px;
-}
-.gantt-grid-lines{ position:absolute; pointer-events:none; z-index:1; }
-.gantt-month-line{
-    position:absolute; top:0; bottom:0; width:1px;
-    background:rgba(255,255,255,0.06);
-}
-.gantt-today-line{
-    position:absolute; top:0; bottom:0; width:2px;
-    background:rgba(239,68,68,0.5);
-    z-index:2;
-}
-.gantt-row{
-    position:absolute; left:0; right:0;
-    display:flex; align-items:center;
-    border-bottom:1px solid rgba(255,255,255,0.035);
-}
-.gantt-row:hover{ background:rgba(255,255,255,0.02); }
-.gantt-row-label{
-    flex-shrink:0; display:flex; align-items:center; gap:10px;
-    padding:0 16px; overflow:hidden;
+.gt-head-row{ position:sticky; top:0; z-index:20; background:var(--bg-card); }
+.gt-days-row{ position:sticky; top:32px; z-index:19; background:var(--bg-card); border-bottom:1px solid var(--border); }
+.gt-task-row:hover{ background:rgba(255,255,255,0.015); }
+
+/* Celda label (sticky a la izquierda) */
+.gt-cell{ flex-shrink:0; }
+.gt-label-cell{
+    position:sticky; left:0; z-index:10;
     background:var(--bg-card);
-    position:sticky; left:0; z-index:5;
     border-right:1px solid var(--border);
-    height:100%;
+    display:flex; align-items:center; gap:10px;
+    padding:0 14px; overflow:hidden;
 }
-.gantt-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.gantt-row-text{
+.gt-head-cell{ background:var(--bg-card); }
+.gt-days-head{ background:var(--bg-card); }
+.gt-label-text{
     font-size:12.5px; font-weight:500; color:var(--texto-soft);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.gantt-row-track{ position:relative; height:100%; flex-shrink:0; }
-.gantt-bar{
-    position:absolute; top:50%; transform:translateY(-50%);
-    height:24px; border-radius:6px; cursor:pointer;
-    display:flex; align-items:center; padding:0 10px;
-    opacity:0.85; transition:opacity 0.15s, transform 0.15s;
-    min-width:8px; z-index:3;
+
+/* Track = zona de días */
+.gt-track{
+    display:flex; flex-direction:row;
+    flex-shrink:0; position:relative;
+    overflow:visible;
 }
-.gantt-bar:hover{ opacity:1; transform:translateY(-50%) scaleY(1.1); }
-.gantt-bar-real{ opacity:1; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
-.gantt-bar-label{
+
+/* Celda mes en header */
+.gt-month-cell{
+    flex-shrink:0; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:var(--texto-soft);
+    text-transform:capitalize; letter-spacing:0.2px;
+    border-right:1px solid var(--border);
+    overflow:hidden; padding:0 8px;
+}
+
+/* Celda día en sub-header */
+.gt-day-cell{
+    flex-shrink:0; height:28px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:500; color:#475569;
+    border-right:1px solid rgba(255,255,255,0.04);
+}
+.gt-hoy{ color:var(--acento-soft) !important; font-weight:700 !important; background:rgba(37,99,235,0.12); }
+.gt-finde{ background:rgba(255,255,255,0.015); color:#334155; }
+
+/* Columnas de fondo por día en filas de tarea */
+.gt-col{
+    position:absolute; top:0; bottom:0;
+    border-right:1px solid rgba(255,255,255,0.04);
+    pointer-events:none;
+}
+.gt-col-fin{ background:rgba(255,255,255,0.012); }
+.gt-col-mes{ border-right:1px solid rgba(255,255,255,0.1); }
+
+/* Línea de hoy */
+.gt-hoy-line{
+    position:absolute; top:0; bottom:0; width:2px;
+    background:rgba(239,68,68,0.55); pointer-events:none; z-index:3;
+}
+
+/* Barra de tarea */
+.gt-bar{
+    position:absolute; top:50%; transform:translateY(-50%);
+    height:26px; border-radius:6px; cursor:pointer; z-index:4;
+    display:flex; align-items:center; padding:0 8px;
+    opacity:0.82; transition:opacity 0.15s,transform 0.15s;
+    min-width:6px;
+}
+.gt-bar:hover{ opacity:1; transform:translateY(-50%) scaleY(1.12); }
+.gt-bar-real{ opacity:1; box-shadow:0 2px 10px rgba(0,0,0,0.35); }
+.gt-bar-label{
     font-size:11px; font-weight:600; color:#fff;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     pointer-events:none;
 }
-.gantt-days-row{
-    border-bottom:1px solid var(--border);
-}
-.gantt-day-num{
-    position:absolute; top:0;
-    display:flex; align-items:center; justify-content:center;
-    font-size:10.5px; font-weight:500; color:#475569;
-    border-right:1px solid rgba(255,255,255,0.04);
-    user-select:none;
-}
-.gantt-day-hoy{
-    color:var(--acento-soft) !important;
-    font-weight:700 !important;
-    background:rgba(37,99,235,0.1);
-}
-.gantt-day-fin{
-    color:#334155;
-    background:rgba(255,255,255,0.015);
-}
-.gantt-day-line{
-    position:absolute; top:0; bottom:0; width:1px;
-    background:rgba(255,255,255,0.04);
-}
-.gantt-day-line-fin{
-    background:rgba(255,255,255,0.07);
-}
+.gantt-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
 /* ── FAB (botones flotantes) ── */
 .fab-group{
