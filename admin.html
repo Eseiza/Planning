@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planner Obras · Admin</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="bg-gradient"></div>
@@ -27,17 +26,13 @@
         </div>
     </nav>
 
-    <!-- NAV SECUNDARIO -->
-    <nav class="nav-sub">
-        <button class="sub-tab" onclick="filtrarEstados('todas')" id="subTodas">Todas</button>
+    <!-- NAV SECUNDARIO — solo visible en vista Estados -->
+    <nav class="nav-sub hidden" id="navSub">
+        <button class="sub-tab active" onclick="filtrarEstados('todas')" id="subTodas">Todas</button>
         <button class="sub-tab" onclick="filtrarEstados('Pendiente')" id="subPendiente">🟡 Pendientes</button>
         <button class="sub-tab" onclick="filtrarEstados('En progreso')" id="subProgreso">🔵 En progreso</button>
         <button class="sub-tab" onclick="filtrarEstados('Finalizada')" id="subFinalizada">🟢 Finalizadas</button>
         <button class="sub-tab" onclick="filtrarEstados('Demorada')" id="subDemorada">🔴 Demoradas</button>
-        <button class="sub-tab" onclick="togglePanel('lista')" id="subLista">📋</button>
-        <button class="sub-tab" onclick="togglePanel('notif')" id="subNotif">
-            🔔 <span class="badge empty" id="badge-notif">0</span>
-        </button>
     </nav>
 
     <!-- CARGAR -->
@@ -75,15 +70,24 @@
         </div>
     </section>
 
-    <!-- CALENDARIO -->
+    <!-- CALENDARIO GANTT -->
     <section id="vista-calendario" class="vista hidden">
-        <div class="calendar-card">
-            <div id="calendar"></div>
+        <div class="gantt-wrapper">
+            <div class="gantt-scroll" id="ganttScroll">
+                <div class="gantt-inner" id="ganttInner"></div>
+            </div>
         </div>
     </section>
 
-    <!-- PANEL OVERLAY -->
-    <div id="panel-overlay" class="panel-overlay" style="display:none" onclick="cerrarPaneles()"></div>
+    <!-- BOTONES FLOTANTES -->
+    <div class="fab-group" id="fabGroup">
+        <div class="fab-item">
+            <button class="fab-btn" onclick="togglePanel('notif')" title="Notificaciones">
+                🔔 <span class="badge empty" id="badge-notif">0</span>
+            </button>
+            <button class="fab-btn" onclick="togglePanel('lista')" title="Lista de tareas">📋</button>
+        </div>
+    </div>
 
     <!-- PANEL LISTA -->
     <div id="panel-lista" class="panel-dropdown">
@@ -96,6 +100,9 @@
         <div class="panel-header">Próximos 5 días <span>inicio estimado</span></div>
         <div id="panel-notif-body"></div>
     </div>
+
+    <!-- PANEL OVERLAY -->
+    <div id="panel-overlay" class="panel-overlay" style="display:none" onclick="cerrarPaneles()"></div>
 
     <!-- MODAL EDICIÓN -->
     <div id="modal-overlay" class="modal-overlay hidden">
@@ -123,7 +130,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="planner.js"></script>
 </body>
 </html>
