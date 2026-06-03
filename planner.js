@@ -321,14 +321,14 @@ function toggleGanttFS() {
         }
         const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen;
         if (req) req.call(wrapper);
-        if (btn) btn.innerHTML = '✕ Salir';
+        if (btn) btn.innerHTML = '✕';
     } else {
         const exit = document.exitFullscreen || document.webkitExitFullscreen;
         if (exit) exit.call(document);
         if (screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
         }
-        if (btn) btn.innerHTML = '⛶ Pantalla completa';
+        if (btn) btn.innerHTML = '⛶';
     }
 }
 
@@ -338,7 +338,7 @@ function _syncFsBtn() {
     const btn = document.getElementById('ganttFsBtn');
     if (!btn) return;
     const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    btn.innerHTML = isFS ? '✕ Salir' : '⛶ Pantalla completa';
+    btn.innerHTML = isFS ?  '⛶';
 }
 
 // ─────────────────────────────────────────
