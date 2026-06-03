@@ -43,7 +43,6 @@ function mostrarVista(nombre) {
     const btn = document.getElementById(btnMap[nombre]);
     if (btn) btn.classList.add('active');
 
-    // Nav secundario solo en estados
     const navSub = document.getElementById('navSub');
     if (navSub) navSub.classList.toggle('hidden', nombre !== 'estados');
 
@@ -167,7 +166,6 @@ function construirGantt() {
             return;
         }
 
-        // — Rango —
         let minFecha = null, maxFecha = null;
         tareas.forEach(t => {
             const ini = parseDate(t.inicioReal || t.inicioEst);
@@ -182,7 +180,6 @@ function construirGantt() {
         const LABEL_W = 220;
         const hoy = new Date(); hoy.setHours(0,0,0,0);
 
-        // — Generar lista de días —
         const dias = [];
         const cur = new Date(minFecha);
         while (cur <= maxFecha) {
@@ -192,7 +189,6 @@ function construirGantt() {
         const totalDias = dias.length;
         const trackW = totalDias * DAY_W;
 
-        // — Agrupar días por mes para header —
         const meses = [];
         dias.forEach((d, i) => {
             const key = `${d.getFullYear()}-${d.getMonth()}`;
@@ -205,8 +201,6 @@ function construirGantt() {
 
         const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6',Finalizada:'#22c55e',Demorada:'#ef4444' };
 
-        // — Construir tabla —
-        // Usamos display:table para que el sticky funcione bien
         let html = `<div class="gt-wrap" style="min-width:${LABEL_W + trackW}px">`;
 
         // FILA MESES
@@ -247,20 +241,17 @@ function construirGantt() {
                      </div>`;
             html += `<div class="gt-track" style="width:${trackW}px;position:relative">`;
 
-            // Columnas de día (fondo)
             dias.forEach((d, i) => {
                 const esFin = d.getDay()===0 || d.getDay()===6;
                 const esMes = d.getDate()===1 && i>0;
                 html += `<div class="gt-col${esFin?' gt-col-fin':''}${esMes?' gt-col-mes':''}" style="left:${i*DAY_W}px;width:${DAY_W}px"></div>`;
             });
 
-            // Línea de hoy
             const dHoy = Math.round((hoy - minFecha) / 86400000);
             if (dHoy >= 0 && dHoy < totalDias) {
                 html += `<div class="gt-hoy-line" style="left:${dHoy*DAY_W}px"></div>`;
             }
 
-            // Barra
             html += `<div class="gt-bar${esReal?' gt-bar-real':''}"
                           style="left:${barL}px;width:${barW}px;background:${color}"
                           onclick="abrirModal('${t.id}')"
@@ -271,7 +262,7 @@ function construirGantt() {
             html += `</div></div>`;
         });
 
-        html += `</div>`; // gt-wrap
+        html += `</div>`;
         inner.innerHTML = html;
         initGanttDrag(scroll);
     });
@@ -298,7 +289,6 @@ function initGanttDrag(el) {
         el.scrollTop  = scrollTop  - (e.pageY - el.offsetTop  - startY);
     });
 
-    // Touch
     let tx, ty, tsl, tst;
     el.addEventListener('touchstart', e => {
         tx  = e.touches[0].pageX;
@@ -312,6 +302,48 @@ function initGanttDrag(el) {
     }, { passive:true });
 }
 
+// ─────────────────────────────────────────
+// GANTT FULLSCREEN
+// ─────────────────────────────────────────
+function toggleGanttFS() {
+    const wrapper = document.querySelector('.gantt-wrapper');
+    const btn     = document.getElementById('ganttFsBtn');
+    if (!wrapper) return;
+
+    const isFS = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement
+    );
+
+    if (!isFS) {
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+        const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen;
+        if (req) req.call(wrapper);
+        if (btn) btn.innerHTML = '✕ Salir';
+    } else {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+        if (btn) btn.innerHTML = '⛶ Pantalla completa';
+    }
+}
+
+document.addEventListener('fullscreenchange',       _syncFsBtn);
+document.addEventListener('webkitfullscreenchange', _syncFsBtn);
+function _syncFsBtn() {
+    const btn = document.getElementById('ganttFsBtn');
+    if (!btn) return;
+    const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    btn.innerHTML = isFS ? '✕ Salir' : '⛶ Pantalla completa';
+}
+
+// ─────────────────────────────────────────
+// HELPERS DE FECHA
+// ─────────────────────────────────────────
 function parseDate(str) {
     if (!str) return new Date();
     const [y,m,d] = str.split('-').map(Number);
