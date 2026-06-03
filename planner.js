@@ -181,20 +181,23 @@ function construirGantt() {
         maxFecha = endOfMonth(maxFecha);
 
         const totalDias = Math.ceil((maxFecha - minFecha) / 86400000) + 1;
-        const DAY_W = 28; // px por día
-        const ROW_H = 48;
-        const LABEL_W = 220;
-        const HEADER_H = 56;
+        const DAY_W    = 32; // px por día
+        const ROW_H    = 48;
+        const LABEL_W  = 220;
+        const MONTH_H  = 32; // fila de meses
+        const DAY_H    = 28; // fila de números de día
+        const HEADER_H = MONTH_H + DAY_H;
 
         const totalW = LABEL_W + totalDias * DAY_W;
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
 
         // Construir HTML
         let html = `<div class="gantt-table" style="width:${totalW}px">`;
 
         // — HEADER MESES —
-        html += `<div class="gantt-header" style="height:${HEADER_H}px">`;
-        html += `<div class="gantt-label-col" style="width:${LABEL_W}px;height:${HEADER_H}px"></div>`;
-        html += `<div class="gantt-months" style="position:relative;flex:1;height:${HEADER_H}px">`;
+        html += `<div class="gantt-header" style="height:${MONTH_H}px">`;
+        html += `<div class="gantt-label-col" style="width:${LABEL_W}px;height:${MONTH_H}px"></div>`;
+        html += `<div class="gantt-months" style="position:relative;flex:1;height:${MONTH_H}px">`;
 
         let cur = new Date(minFecha);
         while (cur <= maxFecha) {
@@ -205,24 +208,39 @@ function construirGantt() {
             const ancho     = (diaFin - diaIni + 1) * DAY_W;
             const left      = diaIni * DAY_W;
             const label     = cur.toLocaleDateString('es-AR', { month:'long', year:'numeric' });
-
-            html += `<div class="gantt-month-label" style="left:${left}px;width:${ancho}px;height:${HEADER_H}px">${label}</div>`;
+            html += `<div class="gantt-month-label" style="left:${left}px;width:${ancho}px;height:${MONTH_H}px">${label}</div>`;
             cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
         }
-        html += '</div></div>'; // gantt-months, gantt-header
+        html += '</div></div>'; // gantt-months, gantt-header (fila meses)
 
-        // — LÍNEAS DE MES (grid vertical) —
+        // — HEADER DÍAS —
+        html += `<div class="gantt-header gantt-days-row" style="height:${DAY_H}px;top:${MONTH_H}px">`;
+        html += `<div class="gantt-label-col" style="width:${LABEL_W}px;height:${DAY_H}px"></div>`;
+        html += `<div class="gantt-months" style="position:relative;flex:1;height:${DAY_H}px">`;
+
+        for (let d = 0; d < totalDias; d++) {
+            const fecha = new Date(minFecha); fecha.setDate(minFecha.getDate() + d);
+            const num   = fecha.getDate();
+            const esHoy = fecha.getTime() === hoy.getTime();
+            const esFin = fecha.getDay() === 0 || fecha.getDay() === 6; // fin de semana
+            html += `<div class="gantt-day-num ${esHoy?'gantt-day-hoy':''} ${esFin?'gantt-day-fin':''}"
+                         style="left:${d*DAY_W}px;width:${DAY_W}px;height:${DAY_H}px">${num}</div>`;
+        }
+        html += '</div></div>'; // días row
+
+        // — GRID VERTICAL (días y meses) —
         html += `<div class="gantt-grid-lines" style="left:${LABEL_W}px;width:${totalDias*DAY_W}px;top:${HEADER_H}px;height:${tareas.length*ROW_H}px">`;
-        let curLine = new Date(minFecha);
-        while (curLine <= maxFecha) {
-            const d = Math.ceil((curLine - minFecha) / 86400000);
-            if (curLine.getDate() === 1 && d > 0) {
+        for (let d = 0; d < totalDias; d++) {
+            const fecha = new Date(minFecha); fecha.setDate(minFecha.getDate() + d);
+            const esFin = fecha.getDay() === 0 || fecha.getDay() === 6;
+            const esMes = fecha.getDate() === 1 && d > 0;
+            if (esMes) {
                 html += `<div class="gantt-month-line" style="left:${d*DAY_W}px"></div>`;
+            } else {
+                html += `<div class="gantt-day-line ${esFin?'gantt-day-line-fin':''}" style="left:${d*DAY_W}px"></div>`;
             }
-            curLine.setDate(curLine.getDate() + 1);
         }
         // Línea de hoy
-        const hoy = new Date(); hoy.setHours(0,0,0,0);
         const dHoy = Math.ceil((hoy - minFecha) / 86400000);
         if (dHoy >= 0 && dHoy <= totalDias) {
             html += `<div class="gantt-today-line" style="left:${dHoy*DAY_W}px"></div>`;
@@ -244,7 +262,8 @@ function construirGantt() {
             const top     = i * ROW_H;
 
             html += `
-            <div class="gantt-row" style="top:${HEADER_H + top}px;height:${ROW_H}px">
+            <div class="gantt-row" style="top:${HEADER_H + top}px;height:${ROW_H}px"
+                 data-top="${HEADER_H + top}">
                 <div class="gantt-row-label" style="width:${LABEL_W}px">
                     <span class="gantt-dot" style="background:${color}"></span>
                     <span class="gantt-row-text">${t.equipo} · ${t.sector}</span>
