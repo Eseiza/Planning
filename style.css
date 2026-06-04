@@ -39,7 +39,7 @@
 
     --pendiente:      #b45309;
     --pendiente-bg:   #fef3c7;
-    --pendiente-brd:  #b4a609;
+    --pendiente-brd:  #fcd34d;
     --progreso:       #1d4ed8;
     --progreso-bg:    #e8f0fe;
     --progreso-brd:   #93c5fd;
@@ -288,19 +288,19 @@ nav.nav-sub {
 ══════════════════════════════ */
 .gantt-fs-btn {
     display: none;
-    position: absolute;
-    top: 8px; right: 8px;
-    z-index: 10;
+    position: fixed;
+    bottom: 90px; right: 14px;
+    z-index: 300;
     border: none;
     background: var(--acento);
     color: #fff;
-    padding: 8px 14px;
-    border-radius: 20px;
+    padding: 10px 16px;
+    border-radius: 24px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 700;
     font-family: 'DM Sans', sans-serif;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 16px rgba(37,99,235,0.45);
     align-items: center;
     gap: 6px;
     white-space: nowrap;
@@ -322,15 +322,10 @@ nav.nav-sub {
     height: 100vh;
 }
 
-.gantt-wrapper:fullscreen .gantt-fs-btn,
-.gantt-wrapper:-webkit-full-screen .gantt-fs-btn {
-    position: fixed;
-    top: 12px; right: 12px;
+.gantt-fs-btn.fs-active {
+    bottom: 12px; right: 12px;
     background: rgba(0,0,0,0.55);
-    color: #fff;
-    border: none;
     box-shadow: var(--shadow);
-    z-index: 9999;
 }
 
 /* ══════════════════════════════
@@ -531,10 +526,6 @@ nav.nav-sub {
 
     /* Mostrar botón fullscreen solo en mobile */
     .gantt-fs-btn { display: flex; }
-
-    /* Label más angosto para que se vean las barras */
-    .gt-label-cell { max-width: 130px; min-width: 0 !important; }
-    .gt-label-text { font-size: 11px; }
 
     .fab-group {
         top: auto; bottom: 20px; right: 14px;
