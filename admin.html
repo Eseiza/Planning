@@ -107,6 +107,20 @@
     <!-- PANEL OVERLAY -->
     <div id="panel-overlay" class="panel-overlay" style="display:none" onclick="cerrarPaneles()"></div>
 
+    <!-- MODAL INFO TAREA (Gantt) -->
+    <div id="info-overlay" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="info-titulo"></h3>
+                <button class="modal-cerrar" onclick="cerrarInfo()">✕</button>
+            </div>
+            <p id="info-descripcion" class="modal-desc"></p>
+            <div id="info-fechas" style="margin-bottom:16px;font-size:13px;color:var(--texto-soft);line-height:1.8"></div>
+            <div id="info-estado-badge" style="margin-bottom:18px"></div>
+            <button id="info-btn-editar" onclick="pasarAEditar()" style="display:none">Editar tarea</button>
+        </div>
+    </div>
+
     <!-- MODAL EDICIÓN -->
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal">
