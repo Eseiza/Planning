@@ -176,8 +176,9 @@ function construirGantt() {
         minFecha = startOfMonth(minFecha);
         maxFecha = endOfMonth(maxFecha);
 
-        const DAY_W   = 34;
-        const LABEL_W = 220;
+        const isMobile = window.innerWidth <= 768;
+        const DAY_W   = isMobile ? 28 : 34;
+        const LABEL_W = isMobile ? 130 : 220;
         const hoy = new Date(); hoy.setHours(0,0,0,0);
 
         const dias = [];
