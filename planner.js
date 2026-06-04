@@ -1,568 +1,562 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+// ─────────────────────────────────────────
+// FIREBASE
+// ─────────────────────────────────────────
+const firebaseConfig = {
+    apiKey: "AIzaSyAJgnFCKt_8TT4BpWrDwqy--Oep0raYA18",
+    authDomain: "romero-env.firebaseapp.com",
+    databaseURL: "https://romero-env-default-rtdb.firebaseio.com",
+    projectId: "romero-env",
+    storageBucket: "romero-env.firebasestorage.app",
+    messagingSenderId: "350498956335",
+    appId: "1:350498956335:web:901f91c4d7b983308252da"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-:root {
-    --gray-50:  #e8eaed;
-    --gray-100: #d8dce1;
-    --gray-150: #c8cdd4;
-    --gray-200: #b3bac4;
-    --gray-300: #8f99a6;
-    --gray-400: #6b7787;
-    --gray-500: #515d6d;
-    --gray-600: #3a4453;
-    --gray-700: #27313d;
-    --gray-800: #18212c;
+// ─────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────
+const autenticado   = sessionStorage.getItem('autenticado');
+const rolActual     = sessionStorage.getItem('rol');
+const usuarioNombre = sessionStorage.getItem('usuario');
+if (!autenticado) window.location.href = './index.html';
 
-    --bg:        #c8cdd4;
-    --bg-card:   #eef0f3;
-    --bg-soft:   #e0e3e8;
-    --bg-input:  #e8eaed;
+const spanUsuario = document.getElementById('usuarioActual');
+if (spanUsuario) spanUsuario.textContent = usuarioNombre || '';
 
-    --border-light: #c8cdd4;
-    --border:       #b3bac4;
-    --border-mid:   #8f99a6;
-
-    --texto:      #18212c;
-    --texto-mid:  #3a4453;
-    --texto-soft: #515d6d;
-    --texto-hint: #8f99a6;
-
-    --acento:      #2563eb;
-    --acento-soft: #3b82f6;
-    --acento-hover:#1d4ed8;
-    --acento-bg:   #e8f0fe;
-    --acento-brd:  #a8c4fb;
-
-    --shadow-xs: 0 1px 3px rgba(0,0,0,0.1);
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.12);
-    --shadow:    0 4px 16px rgba(0,0,0,0.14);
-    --shadow-lg: 0 12px 36px rgba(0,0,0,0.22);
-
-    --pendiente:      #b45309;
-    --pendiente-bg:   #fef3c7;
-    --pendiente-brd:  #fcd34d;
-    --progreso:       #1d4ed8;
-    --progreso-bg:    #e8f0fe;
-    --progreso-brd:   #93c5fd;
-    --finalizada:     #15803d;
-    --finalizada-bg:  #dcfce7;
-    --finalizada-brd: #86efac;
-    --demorada:       #b91c1c;
-    --demorada-bg:    #fee2e2;
-    --demorada-brd:   #fca5a5;
+function logout() {
+    sessionStorage.clear();
+    window.location.href = './index.html';
 }
 
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+// ─────────────────────────────────────────
+// NAVEGACIÓN PRINCIPAL
+// ─────────────────────────────────────────
+function mostrarVista(nombre) {
+    document.querySelectorAll('.vista').forEach(v => v.classList.add('hidden'));
+    document.querySelectorAll('.nav-center button').forEach(b => b.classList.remove('active'));
 
-body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--texto);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-}
+    const vista = document.getElementById('vista-' + nombre);
+    if (vista) vista.classList.remove('hidden');
 
-.bg-gradient, .bg-lines { display: none; }
+    const btnMap = { cargar:'btnCarga', estados:'btnEstados', calendario:'btnCalendario' };
+    const btn = document.getElementById(btnMap[nombre]);
+    if (btn) btn.classList.add('active');
 
-/* ══════════════════════════════
-   NAV PRINCIPAL
-══════════════════════════════ */
-nav.nav-main {
-    width: 100%; height: 56px;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 20px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 200;
-    box-shadow: var(--shadow-sm);
-}
-.nav-left  { display: flex; align-items: center; }
-.nav-logo  { width: 120px; object-fit: contain; }
-.nav-center { display: flex; gap: 4px; }
+    const navSub = document.getElementById('navSub');
+    if (navSub) navSub.classList.toggle('hidden', nombre !== 'estados');
 
-.nav-center button {
-    border: none; background: transparent; color: var(--texto-soft);
-    padding: 7px 14px; border-radius: 8px;
-    cursor: pointer; transition: all 0.15s;
-    font-size: 13.5px; font-weight: 600; font-family: 'DM Sans', sans-serif;
-}
-.nav-center button:hover { background: var(--bg-soft); color: var(--texto-mid); }
-.nav-center button.active {
-    background: var(--acento); color: #fff;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.28);
+    if (nombre === 'estados')    { filtroActivo = 'todas'; cargarEstados(); }
+    if (nombre === 'calendario') { setTimeout(construirGantt, 80); }
+
+    const fsBtn = document.getElementById('ganttFsBtn');
+    if (fsBtn) fsBtn.style.display = nombre === 'calendario' ? 'flex' : 'none';
+
+    cerrarPaneles();
 }
 
-.nav-right { display: flex; align-items: center; gap: 10px; }
-#usuarioActual {
-    font-size: 12px; color: var(--texto-soft); font-weight: 600;
-    background: var(--bg-soft); padding: 4px 11px;
-    border-radius: 20px; border: 1px solid var(--border);
-}
-.nav-right > button {
-    border: 1px solid var(--border); background: var(--bg-soft);
-    color: var(--texto-soft); padding: 6px 13px;
-    border-radius: 8px; cursor: pointer;
-    transition: all 0.15s; font-size: 13px; font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
-}
-.nav-right > button:hover { background: var(--gray-100); color: var(--texto-mid); border-color: var(--border-mid); }
+// ─────────────────────────────────────────
+// GUARDAR TAREA
+// ─────────────────────────────────────────
+function guardarTarea() {
+    const sector      = document.getElementById('sector')?.value.trim();
+    const equipo      = document.getElementById('equipo')?.value.trim();
+    const descripcion = document.getElementById('descripcion')?.value.trim();
+    const inicioEst   = document.getElementById('inicioEst')?.value;
+    const finEst      = document.getElementById('finEst')?.value;
+    const estado      = document.getElementById('estado')?.value;
 
-/* ══════════════════════════════
-   NAV SECUNDARIO
-══════════════════════════════ */
-nav.nav-sub {
-    width: 100%; display: flex; align-items: center; gap: 2px;
-    padding: 0 20px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 56px; z-index: 199; height: 42px;
-}
-.sub-tab {
-    position: relative; border: none; background: transparent;
-    color: var(--texto-soft); padding: 6px 12px; border-radius: 7px;
-    cursor: pointer; transition: all 0.15s;
-    font-size: 13px; font-weight: 600;
-    display: flex; align-items: center; gap: 5px; white-space: nowrap;
-    font-family: 'DM Sans', sans-serif;
-}
-.sub-tab:hover { background: var(--bg-soft); color: var(--texto-mid); }
-.sub-tab.active { color: var(--acento); background: var(--acento-bg); }
-.sub-tab.active::after {
-    content: ''; position: absolute; bottom: -1px; left: 8px; right: 8px;
-    height: 2px; background: var(--acento); border-radius: 2px;
-}
-
-/* ══════════════════════════════
-   VISTAS
-══════════════════════════════ */
-.vista { padding: 18px 20px; }
-.hidden { display: none !important; }
-
-/* ══════════════════════════════
-   CARD FORMULARIO
-══════════════════════════════ */
-.card {
-    width: 100%; max-width: 600px; margin: auto;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 26px; box-shadow: var(--shadow-sm);
-}
-.card h2 { margin-bottom: 20px; font-size: 19px; font-weight: 700; color: var(--texto); }
-.card label {
-    display: block; margin-bottom: 5px;
-    color: var(--texto-soft); font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.6px;
-}
-.card input, .card textarea, .card select {
-    width: 100%; margin-bottom: 12px;
-    background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px; color: var(--texto);
-    font-size: 14px; outline: none; transition: all 0.15s;
-    font-family: 'DM Sans', sans-serif;
-}
-.card textarea { min-height: 88px; resize: vertical; }
-.card input:focus, .card textarea:focus, .card select:focus {
-    border-color: var(--acento); background: var(--bg-card);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-.card > button {
-    width: 100%; border: none; background: var(--acento); color: #fff;
-    padding: 11px; border-radius: 8px; cursor: pointer;
-    font-size: 14px; font-weight: 700; transition: all 0.15s;
-    font-family: 'DM Sans', sans-serif;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.24);
-}
-.card > button:hover { background: var(--acento-hover); transform: translateY(-1px); }
-
-/* ══════════════════════════════
-   ESTADOS
-══════════════════════════════ */
-.estado-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 12px;
-}
-.estado-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px;
-    min-height: 80px; box-shadow: var(--shadow-xs);
-}
-.estado-card:nth-child(1) { border-top: 3px solid var(--pendiente); }
-.estado-card:nth-child(2) { border-top: 3px solid var(--progreso); }
-.estado-card:nth-child(3) { border-top: 3px solid var(--finalizada); }
-.estado-card:nth-child(4) { border-top: 3px solid var(--demorada); }
-
-.estado-card h3 {
-    margin-bottom: 11px; font-size: 11px; font-weight: 700;
-    color: var(--texto-soft); text-transform: uppercase; letter-spacing: 0.5px;
-    display: flex; align-items: center; gap: 6px;
-}
-
-.tarea {
-    background: #fff; border: 1px solid var(--border-light);
-    border-radius: 8px; padding: 11px; margin-bottom: 8px; transition: all 0.14s;
-}
-.tarea:hover { border-color: var(--border-mid); box-shadow: var(--shadow-xs); transform: translateY(-1px); }
-.tarea h4 { margin-bottom: 4px; font-size: 13px; font-weight: 600; color: var(--texto); }
-.tarea p  { color: var(--texto-soft); font-size: 12.5px; margin-bottom: 6px; line-height: 1.4; }
-.tarea small { color: var(--texto-hint); font-size: 11.5px; line-height: 1.6; display: block; }
-
-.tarea-acciones { display: flex; gap: 6px; margin-top: 8px; }
-.tarea-acciones button {
-    flex: 1; border: 1px solid transparent;
-    padding: 6px 10px; border-radius: 6px;
-    cursor: pointer; font-weight: 600; font-size: 12px;
-    transition: all 0.14s; font-family: 'DM Sans', sans-serif;
-}
-.editar   { background: var(--acento-bg); color: var(--acento); border-color: var(--acento-brd); }
-.editar:hover   { background: #d0e4fd; }
-.eliminar { background: var(--demorada-bg); color: var(--demorada); border-color: var(--demorada-brd); }
-.eliminar:hover { background: #fecaca; }
-
-/* ══════════════════════════════
-   GANTT
-══════════════════════════════ */
-.gantt-wrapper {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 12px; overflow: hidden;
-    height: calc(100vh - 118px); box-shadow: var(--shadow-xs);
-    position: relative;
-}
-.gantt-scroll {
-    width: 100%; height: 100%;
-    overflow: auto;
-    cursor: grab;
-    user-select: none;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pan-y;
-}
-.gantt-scroll.grabbing { cursor: grabbing; }
-.gantt-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
-.gantt-scroll::-webkit-scrollbar-track { background: var(--bg-soft); }
-.gantt-scroll::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
-
-.gt-wrap { display: flex; flex-direction: column; }
-.gt-row { display: flex; flex-direction: row; border-bottom: 1px solid var(--border-light); min-height: 44px; }
-.gt-head-row  { position: sticky; top: 0;    z-index: 20; background: var(--bg-card); }
-.gt-days-row  { position: sticky; top: 32px; z-index: 19; background: var(--bg-soft); border-bottom: 1px solid var(--border); }
-.gt-task-row:hover { background: var(--bg-soft); }
-
-.gt-cell { flex-shrink: 0; }
-.gt-label-cell {
-    position: sticky; left: 0; z-index: 10;
-    background: var(--bg-card); border-right: 1px solid var(--border);
-    display: flex; align-items: center; gap: 8px;
-    padding: 0 12px; overflow: hidden;
-}
-.gt-head-cell { background: var(--bg-card); }
-.gt-days-head { background: var(--bg-soft); }
-.gt-label-text { font-size: 12px; font-weight: 500; color: var(--texto-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.gt-track { display: flex; flex-direction: row; flex-shrink: 0; position: relative; overflow: visible; }
-.gt-month-cell {
-    flex-shrink: 0; height: 32px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: var(--texto-mid);
-    text-transform: capitalize; border-right: 1px solid var(--border);
-    padding: 0 8px; background: var(--bg-soft);
-}
-.gt-day-cell {
-    flex-shrink: 0; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 500; color: var(--texto-hint);
-    border-right: 1px solid var(--border-light); background: var(--bg-soft);
-}
-.gt-hoy   { color: var(--acento) !important; font-weight: 700 !important; background: var(--acento-bg) !important; }
-.gt-finde { background: var(--gray-100) !important; color: var(--gray-300) !important; }
-
-.gt-col { position: absolute; top: 0; bottom: 0; border-right: 1px solid var(--border-light); pointer-events: none; }
-.gt-col-fin { background: rgba(0,0,0,0.02); }
-.gt-col-mes { border-right: 1px solid var(--border); }
-.gt-hoy-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(185,28,28,0.45); pointer-events: none; z-index: 3; }
-
-.gt-bar {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    height: 22px; border-radius: 5px; cursor: pointer; z-index: 4;
-    display: flex; align-items: center; padding: 0 8px;
-    opacity: 0.88; transition: opacity 0.14s, transform 0.14s; min-width: 6px;
-}
-.gt-bar:hover { opacity: 1; transform: translateY(-50%) scaleY(1.1); }
-.gt-bar-real  { opacity: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.18); }
-.gt-bar-label { font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-.gantt-dot    { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-
-/* ══════════════════════════════
-   GANTT FULLSCREEN MOBILE
-══════════════════════════════ */
-.gantt-fs-btn {
-    display: none;
-    position: fixed;
-    bottom: 20px; left: 16px;
-    z-index: 198;
-    border: none;
-    background: var(--acento);
-    color: #fff;
-    width: 46px; height: 46px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 20px;
-    transition: all 0.16s;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 3px 12px rgba(37,99,235,0.35);
-    font-family: 'DM Sans', sans-serif;
-}
-.gantt-fs-btn:hover { background: var(--acento-hover); transform: scale(1.07); }
-
-.gantt-wrapper:fullscreen,
-.gantt-wrapper:-webkit-full-screen {
-    background: var(--bg-card);
-    padding: 0;
-    border-radius: 0;
-    height: 100vh;
-    width: 100vw;
-}
-.gantt-wrapper:fullscreen .gantt-scroll,
-.gantt-wrapper:-webkit-full-screen .gantt-scroll {
-    width: 100vw;
-    height: 100vh;
-}
-/* Botón ✕ que aparece dentro del wrapper en fullscreen */
-.gantt-fs-btn-inner {
-    position: fixed;
-    bottom: 20px; left: 16px;
-    z-index: 9999;
-    border: none;
-    background: rgba(0,0,0,0.55);
-    color: #fff;
-    width: 46px; height: 46px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.35);
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.16s;
-}
-.gantt-fs-btn-inner:hover { transform: scale(1.07); background: rgba(0,0,0,0.75); }
-
-/* ══════════════════════════════
-   FAB
-══════════════════════════════ */
-.fab-group {
-    position: fixed;
-    top: 114px;
-    right: 16px;
-    z-index: 198;
-    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
-}
-.fab-item { display: flex; flex-direction: column; gap: 8px; }
-.fab-btn {
-    border: none; background: var(--acento); color: #fff;
-    width: 46px; height: 46px; border-radius: 50%;
-    cursor: pointer; font-size: 18px; transition: all 0.16s;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 3px 12px rgba(37,99,235,0.35); position: relative;
-}
-.fab-btn:hover { background: var(--acento-hover); transform: scale(1.07); }
-
-/* ══════════════════════════════
-   BADGE
-══════════════════════════════ */
-.badge {
-    position: absolute; top: -4px; right: -4px;
-    background: var(--demorada); color: #fff;
-    font-size: 10px; font-weight: 700;
-    padding: 2px 5px; border-radius: 20px;
-    min-width: 16px; text-align: center; line-height: 14px;
-    pointer-events: none; border: 1.5px solid var(--bg-card);
-}
-.badge.empty { display: none; }
-
-/* ══════════════════════════════
-   OVERLAY OSCURO (panel)
-══════════════════════════════ */
-.panel-overlay {
-    position: fixed; inset: 0; z-index: 990;
-    background: rgba(18,27,40,0.45);
-    backdrop-filter: blur(2px);
-    transition: opacity 0.2s;
-}
-
-/* ══════════════════════════════
-   PANELS FLOTANTES
-══════════════════════════════ */
-.panel-dropdown {
-    position: fixed; top: 168px; right: 70px;
-    width: 340px; max-height: 460px; overflow-y: auto;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 12px; box-shadow: var(--shadow-lg);
-    z-index: 991; display: none;
-    animation: dropIn 0.16s ease;
-}
-.panel-dropdown.open { display: block; }
-@keyframes dropIn {
-    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.panel-header {
-    padding: 12px 16px 10px; border-bottom: 1px solid var(--border-light);
-    font-size: 13px; font-weight: 700; color: var(--texto);
-    display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; background: var(--bg-soft);
-    border-radius: 12px 12px 0 0;
-}
-.panel-header span { color: var(--texto-hint); font-size: 11px; font-weight: 500; }
-.panel-item { padding: 11px 16px; border-bottom: 1px solid var(--border-light); transition: background 0.12s; }
-.panel-item:last-child { border-bottom: none; }
-.panel-item:hover { background: var(--bg-soft); }
-.panel-item-titulo { font-size: 13px; font-weight: 600; margin-bottom: 2px; color: var(--texto); }
-.panel-item-desc   { font-size: 12px; color: var(--texto-soft); margin-bottom: 5px; line-height: 1.4; }
-.panel-item-meta   { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.panel-estado-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.panel-item-fecha  { font-size: 11px; color: var(--texto-hint); }
-.panel-empty       { padding: 24px 16px; text-align: center; color: var(--texto-hint); font-size: 13px; }
-
-/* ══════════════════════════════
-   LOGIN
-══════════════════════════════ */
-.login-container {
-    width: 100%; max-width: 385px; margin: 7vh auto 0;
-    background: var(--bg-card); border-radius: 14px; padding: 32px;
-    box-shadow: var(--shadow-lg); border: 1px solid var(--border);
-}
-.header-icon { width: 172px; display: block; margin: 0 auto 20px; }
-.divider { border: none; border-top: 1px solid var(--border-light); margin-bottom: 20px; }
-.roles-label { color: var(--texto-soft); font-size: 11px; margin-bottom: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-
-#rolSelect {
-    width: 100%; padding: 10px 12px; border-radius: 8px;
-    border: 1px solid var(--border); margin-bottom: 14px;
-    font-size: 14px; font-family: 'DM Sans', sans-serif;
-    color: var(--texto); background: var(--bg-input); outline: none; transition: all 0.15s;
-}
-#rolSelect:focus { border-color: var(--acento); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-
-.form-body { opacity: 0; max-height: 0; overflow: hidden; transition: all 0.3s ease; }
-.form-body.visible { opacity: 1; max-height: 500px; }
-.form-group { margin-bottom: 12px; }
-.form-group label { display: block; margin-bottom: 5px; color: var(--texto-soft); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-.form-group input {
-    width: 100%; padding: 10px 12px; border-radius: 8px;
-    border: 1px solid var(--border); font-size: 14px;
-    font-family: 'DM Sans', sans-serif; color: var(--texto);
-    background: var(--bg-input); outline: none; transition: all 0.15s;
-}
-.form-group input:focus { border-color: var(--acento); background: var(--bg-card); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-
-#loginForm button {
-    width: 100%; border: none; background: var(--acento); color: #fff;
-    padding: 11px; border-radius: 8px; cursor: pointer;
-    font-weight: 700; margin-top: 6px; font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.24); transition: all 0.15s;
-}
-#loginForm button:hover { background: var(--acento-hover); transform: translateY(-1px); }
-#loginMessage { margin-top: 12px; text-align: center; font-weight: 600; font-size: 13px; }
-
-.info-estado {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 5px 12px; border-radius: 20px;
-    font-size: 12px; font-weight: 700;
-}
-.info-estado.Pendiente   { background: var(--pendiente-bg);  color: var(--pendiente);  border: 1px solid var(--pendiente-brd); }
-.info-estado.En-progreso { background: var(--progreso-bg);   color: var(--progreso);   border: 1px solid var(--progreso-brd); }
-.info-estado.Finalizada  { background: var(--finalizada-bg); color: var(--finalizada); border: 1px solid var(--finalizada-brd); }
-.info-estado.Demorada    { background: var(--demorada-bg);   color: var(--demorada);   border: 1px solid var(--demorada-brd); }
-
-/* ══════════════════════════════
-   MODAL
-══════════════════════════════ */
-.modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(18,27,40,0.55);
-    backdrop-filter: blur(3px); z-index: 1000;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-}
-.modal-overlay.hidden { display: none; }
-.modal {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 24px; width: 100%; max-width: 440px;
-    box-shadow: var(--shadow-lg); animation: modalIn 0.18s ease;
-}
-@keyframes modalIn {
-    from { opacity: 0; transform: translateY(10px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-.modal-header h3 { font-size: 16px; font-weight: 700; flex: 1; padding-right: 12px; color: var(--texto); }
-.modal-cerrar {
-    background: var(--bg-soft); border: 1px solid var(--border);
-    color: var(--texto-soft); width: 28px; height: 28px; border-radius: 50%;
-    cursor: pointer; font-size: 13px;
-    display: flex; align-items: center; justify-content: center; transition: all 0.14s;
-}
-.modal-cerrar:hover { background: var(--gray-200); color: var(--texto); }
-.modal-desc { color: var(--texto-soft); font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
-.modal label { display: block; margin-bottom: 5px; color: var(--texto-soft); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-.modal input[type="date"], .modal select {
-    width: 100%; margin-bottom: 12px;
-    background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px;
-    color: var(--texto); font-size: 14px; outline: none; transition: all 0.15s;
-    font-family: 'DM Sans', sans-serif;
-}
-.modal input[type="date"]:focus, .modal select:focus {
-    border-color: var(--acento); background: var(--bg-card);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-.modal button:not(.modal-cerrar) {
-    width: 100%; border: none; background: var(--acento); color: #fff;
-    padding: 11px; border-radius: 8px; cursor: pointer;
-    font-size: 14px; font-weight: 700; transition: all 0.15s; margin-top: 4px;
-    font-family: 'DM Sans', sans-serif;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.24);
-}
-.modal button:not(.modal-cerrar):hover { background: var(--acento-hover); transform: translateY(-1px); }
-
-/* ══════════════════════════════
-   RESPONSIVE — MOBILE
-══════════════════════════════ */
-@media (max-width: 768px) {
-    nav.nav-main {
-        height: auto; flex-wrap: wrap;
-        padding: 10px 14px; gap: 8px;
+    if (!sector || !equipo || !descripcion) {
+        alert('Completá al menos sector, equipo y descripción.');
+        return;
     }
-    .nav-left  { width: 100%; justify-content: center; }
-    .nav-center { width: 100%; justify-content: center; }
-    .nav-right { width: 100%; justify-content: flex-end; }
-    nav.nav-sub { top: 0; padding: 0 10px; overflow-x: auto; flex-wrap: nowrap; }
-    .sub-tab { font-size: 12px; padding: 6px 10px; }
+    db.ref('tareas').push({
+        sector, equipo, descripcion,
+        inicioEst: inicioEst||'', finEst: finEst||'',
+        inicioReal:'', finReal:'',
+        estado, creadoPor: usuarioNombre, timestamp: Date.now()
+    })
+    .then(() => {
+        alert('Tarea guardada.');
+        ['sector','equipo','descripcion','inicioEst','finEst'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.getElementById('estado').value = 'Pendiente';
+        actualizarBadgeNotif();
+    })
+    .catch(err => alert('Error: ' + err.message));
+}
 
-    .vista { padding: 10px 10px; }
-    .card  { padding: 16px; }
+// ─────────────────────────────────────────
+// FILTRO ESTADOS
+// ─────────────────────────────────────────
+let filtroActivo = 'todas';
 
-    .estado-container { grid-template-columns: 1fr; gap: 10px; }
+function filtrarEstados(filtro) {
+    filtroActivo = filtro;
+    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+    const tabMap = { todas:'subTodas', Pendiente:'subPendiente', 'En progreso':'subProgreso', Finalizada:'subFinalizada', Demorada:'subDemorada' };
+    const el = document.getElementById(tabMap[filtro]);
+    if (el) el.classList.add('active');
+    cargarEstados();
+}
 
-    .gantt-wrapper { height: calc(100vh - 160px); border-radius: 8px; }
-    .gt-row        { min-height: 48px; }
-    .gt-label-text { font-size: 12px; }
-    .gt-day-cell   { font-size: 10px; height: 28px; }
-    .gt-month-cell { font-size: 11px; height: 32px; }
-    .gt-bar        { height: 26px; border-radius: 5px; }
-    .gt-bar-label  { font-size: 11px; }
+function cargarEstados() {
+    const contenedores = {
+        'Pendiente':   document.getElementById('pendientes'),
+        'En progreso': document.getElementById('progreso'),
+        'Finalizada':  document.getElementById('finalizadas'),
+        'Demorada':    document.getElementById('demoradas')
+    };
+    Object.values(contenedores).forEach(c => { if (c) c.innerHTML = ''; });
 
-    /* Label más angosto para que se vean las barras */
-    .gt-label-cell { max-width: 130px; min-width: 0 !important; }
-    .gt-label-text { font-size: 11px; }
+    document.querySelectorAll('.estado-card').forEach(card => {
+        if (filtroActivo === 'todas') { card.style.display = ''; return; }
+        const mapa = { Pendiente:'Pendientes', 'En progreso':'En progreso', Finalizada:'Finalizadas', Demorada:'Demoradas' };
+        card.style.display = card.querySelector('h3')?.textContent.includes(mapa[filtroActivo]) ? '' : 'none';
+    });
 
-    .fab-group {
-        top: auto; bottom: 20px; right: 14px;
-        z-index: 198;
-    }
+    db.ref('tareas').once('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        Object.entries(data).forEach(([id, tarea]) => {
+            if (filtroActivo !== 'todas' && tarea.estado !== filtroActivo) return;
+            const cont = contenedores[tarea.estado];
+            if (!cont) return;
+            const div = document.createElement('div');
+            div.className = 'tarea';
+            div.innerHTML = `
+                <h4>${tarea.equipo} · ${tarea.sector}</h4>
+                <p>${tarea.descripcion}</p>
+                <small>
+                    ${tarea.inicioEst ? '📅 Est: '+formatFecha(tarea.inicioEst)+(tarea.finEst?' → '+formatFecha(tarea.finEst):'') : ''}
+                    ${tarea.inicioReal ? '<br>✅ Real: '+formatFecha(tarea.inicioReal)+(tarea.finReal?' → '+formatFecha(tarea.finReal):'') : ''}
+                </small>
+                <div class="tarea-acciones">
+                    <button class="editar" onclick="abrirModal('${id}')">Editar</button>
+                    ${rolActual==='admin' ? `<button class="eliminar" onclick="eliminarTarea('${id}')">Eliminar</button>` : ''}
+                </div>`;
+            cont.appendChild(div);
+        });
+    });
+}
 
-    .panel-dropdown {
-        top: auto; bottom: 80px;
-        right: 10px; left: 10px;
-        width: auto; max-height: 55vh;
+// ─────────────────────────────────────────
+// GANTT
+// ─────────────────────────────────────────
+function construirGantt() {
+    const inner  = document.getElementById('ganttInner');
+    const scroll = document.getElementById('ganttScroll');
+    if (!inner || !scroll) return;
+    inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">Cargando...</div>';
+
+    db.ref('tareas').once('value', snapshot => {
+        const data = snapshot.val();
+        inner.innerHTML = '';
+
+        if (!data) {
+            inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">No hay tareas cargadas.</div>';
+            return;
+        }
+
+        const tareas = Object.entries(data)
+            .map(([id, t]) => ({ id, ...t }))
+            .filter(t => t.inicioReal || t.inicioEst);
+
+        if (!tareas.length) {
+            inner.innerHTML = '<div style="padding:40px;color:var(--texto-soft);text-align:center">No hay tareas con fechas.</div>';
+            return;
+        }
+
+        let minFecha = null, maxFecha = null;
+        tareas.forEach(t => {
+            const ini = parseDate(t.inicioReal || t.inicioEst);
+            const fin = parseDate(t.finReal || t.finEst || t.inicioReal || t.inicioEst);
+            if (!minFecha || ini < minFecha) minFecha = ini;
+            if (!maxFecha || fin > maxFecha) maxFecha = fin;
+        });
+        minFecha = startOfMonth(minFecha);
+        maxFecha = endOfMonth(maxFecha);
+
+        const isMobile = window.innerWidth <= 768;
+        const DAY_W   = isMobile ? 28 : 34;
+        const LABEL_W = isMobile ? 130 : 220;
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+
+        const dias = [];
+        const cur = new Date(minFecha);
+        while (cur <= maxFecha) {
+            dias.push(new Date(cur));
+            cur.setDate(cur.getDate() + 1);
+        }
+        const totalDias = dias.length;
+        const trackW = totalDias * DAY_W;
+
+        const meses = [];
+        dias.forEach((d, i) => {
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (!meses.length || meses[meses.length-1].key !== key) {
+                meses.push({ key, label: d.toLocaleDateString('es-AR',{month:'long',year:'numeric'}), startIdx: i, count: 1 });
+            } else {
+                meses[meses.length-1].count++;
+            }
+        });
+
+        const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6',Finalizada:'#22c55e',Demorada:'#ef4444' };
+
+        let html = `<div class="gt-wrap" style="min-width:${LABEL_W + trackW}px">`;
+
+        // FILA MESES
+        html += `<div class="gt-row gt-head-row">`;
+        html += `<div class="gt-cell gt-label-cell gt-head-cell" style="width:${LABEL_W}px;min-width:${LABEL_W}px"></div>`;
+        html += `<div class="gt-track" style="width:${trackW}px">`;
+        meses.forEach(m => {
+            html += `<div class="gt-month-cell" style="width:${m.count*DAY_W}px">${m.label}</div>`;
+        });
+        html += `</div></div>`;
+
+        // FILA DÍAS
+        html += `<div class="gt-row gt-days-row">`;
+        html += `<div class="gt-cell gt-label-cell gt-days-head" style="width:${LABEL_W}px;min-width:${LABEL_W}px"></div>`;
+        html += `<div class="gt-track" style="width:${trackW}px">`;
+        dias.forEach(d => {
+            const esHoy = d.getTime() === hoy.getTime();
+            const esFin = d.getDay()===0 || d.getDay()===6;
+            html += `<div class="gt-day-cell${esHoy?' gt-hoy':''}${esFin?' gt-finde':''}" style="width:${DAY_W}px">${d.getDate()}</div>`;
+        });
+        html += `</div></div>`;
+
+        // FILAS TAREAS
+        tareas.forEach(t => {
+            const ini   = parseDate(t.inicioReal || t.inicioEst);
+            const fin   = parseDate(t.finReal || t.finEst || t.inicioReal || t.inicioEst);
+            const dIni  = Math.round((ini - minFecha) / 86400000);
+            const dFin  = Math.round((fin - minFecha) / 86400000);
+            const barL  = dIni * DAY_W;
+            const barW  = Math.max((dFin - dIni + 1) * DAY_W, DAY_W);
+            const color = colores[t.estado] || '#888';
+            const esReal = !!t.inicioReal;
+
+            html += `<div class="gt-row gt-task-row">`;
+            html += `<div class="gt-cell gt-label-cell" style="width:${LABEL_W}px;min-width:${LABEL_W}px">
+                        <span class="gantt-dot" style="background:${color}"></span>
+                        <span class="gt-label-text">${t.equipo} · ${t.sector}</span>
+                     </div>`;
+            html += `<div class="gt-track" style="width:${trackW}px;position:relative">`;
+
+            dias.forEach((d, i) => {
+                const esFin = d.getDay()===0 || d.getDay()===6;
+                const esMes = d.getDate()===1 && i>0;
+                html += `<div class="gt-col${esFin?' gt-col-fin':''}${esMes?' gt-col-mes':''}" style="left:${i*DAY_W}px;width:${DAY_W}px"></div>`;
+            });
+
+            const dHoy = Math.round((hoy - minFecha) / 86400000);
+            if (dHoy >= 0 && dHoy < totalDias) {
+                html += `<div class="gt-hoy-line" style="left:${dHoy*DAY_W}px"></div>`;
+            }
+
+            html += `<div class="gt-bar${esReal?' gt-bar-real':''}"
+                          style="left:${barL}px;width:${barW}px;background:${color}"
+                          onclick="abrirInfo('${t.id}')"
+                          title="${t.equipo} · ${t.sector}\n${t.descripcion}">
+                        <span class="gt-bar-label">${t.equipo}</span>
+                     </div>`;
+
+            html += `</div></div>`;
+        });
+
+        html += `</div>`;
+        inner.innerHTML = html;
+        initGanttDrag(scroll);
+    });
+}
+
+function initGanttDrag(el) {
+    // Scroll nativo en mobile (touch)
+    el.style.webkitOverflowScrolling = 'touch';
+    el.style.overflowX = 'auto';
+    el.style.overflowY = 'auto';
+
+    // Drag con mouse en desktop
+    let isDown = false, startX, startY, scrollLeft, scrollTop;
+
+    el.addEventListener('mousedown', e => {
+        if (e.target.closest('.gt-bar')) return;
+        isDown = true;
+        el.classList.add('grabbing');
+        startX = e.pageX - el.offsetLeft;
+        startY = e.pageY - el.offsetTop;
+        scrollLeft = el.scrollLeft;
+        scrollTop  = el.scrollTop;
+    });
+    el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('grabbing'); });
+    el.addEventListener('mouseup',    () => { isDown = false; el.classList.remove('grabbing'); });
+    el.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        e.preventDefault();
+        el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
+        el.scrollTop  = scrollTop  - (e.pageY - el.offsetTop  - startY);
+    });
+}
+
+// ─────────────────────────────────────────
+// GANTT FULLSCREEN
+// ─────────────────────────────────────────
+function toggleGanttFS() {
+    const wrapper = document.querySelector('.gantt-wrapper');
+    if (!wrapper) return;
+
+    const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+    if (!isFS) {
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+        const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen;
+        if (req) req.call(wrapper);
+    } else {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
     }
 }
+
+document.addEventListener('fullscreenchange',       _syncFsBtn);
+document.addEventListener('webkitfullscreenchange', _syncFsBtn);
+
+function _syncFsBtn() {
+    const btnOrig = document.getElementById('ganttFsBtn');
+    const wrapper = document.querySelector('.gantt-wrapper');
+    const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+    if (isFS && wrapper) {
+        let btnFS = wrapper.querySelector('.gantt-fs-btn-inner');
+        if (!btnFS) {
+            btnFS = document.createElement('button');
+            btnFS.className = 'gantt-fs-btn-inner';
+            btnFS.onclick = toggleGanttFS;
+            wrapper.appendChild(btnFS);
+        }
+        btnFS.textContent = '✕';
+        if (btnOrig) btnOrig.style.display = 'none';
+    } else {
+        const btnFS = document.querySelector('.gantt-wrapper .gantt-fs-btn-inner');
+        if (btnFS) btnFS.remove();
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+        const vistaCalendario = document.getElementById('vista-calendario');
+        if (btnOrig) btnOrig.style.display = (vistaCalendario && !vistaCalendario.classList.contains('hidden')) ? 'flex' : 'none';
+    }
+}
+
+// ─────────────────────────────────────────
+// HELPERS DE FECHA
+// ─────────────────────────────────────────
+function parseDate(str) {
+    if (!str) return new Date();
+    const [y,m,d] = str.split('-').map(Number);
+    return new Date(y, m-1, d);
+}
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d)   { return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+// ─────────────────────────────────────────
+// PANELES FLOTANTES
+// ─────────────────────────────────────────
+function togglePanel(tipo) {
+    const panel   = document.getElementById('panel-' + tipo);
+    const overlay = document.getElementById('panel-overlay');
+    if (!panel) return;
+    const abierto = panel.classList.contains('open');
+    cerrarPaneles();
+    if (!abierto) {
+        panel.classList.add('open');
+        if (overlay) overlay.style.display = 'block';
+        if (tipo === 'lista') cargarPanelLista();
+        if (tipo === 'notif') cargarPanelNotif();
+    }
+}
+
+function cerrarPaneles() {
+    document.querySelectorAll('.panel-dropdown').forEach(p => p.classList.remove('open'));
+    const overlay = document.getElementById('panel-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function cargarPanelLista() {
+    const body = document.getElementById('panel-lista-body');
+    if (!body) return;
+    body.innerHTML = '<div class="panel-empty">Cargando...</div>';
+    const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6', Finalizada:'#22c55e', Demorada:'#ef4444' };
+    db.ref('tareas').once('value', snapshot => {
+        const data = snapshot.val();
+        body.innerHTML = '';
+        if (!data) { body.innerHTML = '<div class="panel-empty">No hay tareas.</div>'; return; }
+        Object.values(data).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(t => {
+            const item = document.createElement('div');
+            item.className = 'panel-item';
+            item.innerHTML = `
+                <div class="panel-item-titulo">${t.equipo} · ${t.sector}</div>
+                <div class="panel-item-desc">${t.descripcion}</div>
+                <div class="panel-item-meta">
+                    <span class="panel-estado-dot" style="background:${colores[t.estado]||'#888'}"></span>
+                    <span style="font-size:12px;color:var(--texto-soft);font-weight:600">${t.estado}</span>
+                    ${t.inicioEst?`<span class="panel-item-fecha">📅 ${formatFecha(t.inicioEst)}${t.finEst?' → '+formatFecha(t.finEst):''}</span>`:''}
+                </div>`;
+            body.appendChild(item);
+        });
+    });
+}
+
+function cargarPanelNotif() {
+    const body = document.getElementById('panel-notif-body');
+    if (!body) return;
+    body.innerHTML = '<div class="panel-empty">Cargando...</div>';
+    const hoy    = new Date(); hoy.setHours(0,0,0,0);
+    const limite = new Date(hoy); limite.setDate(hoy.getDate()+5);
+    const colores = { Pendiente:'#f59e0b','En progreso':'#3b82f6', Finalizada:'#22c55e', Demorada:'#ef4444' };
+    db.ref('tareas').once('value', snapshot => {
+        const data = snapshot.val();
+        body.innerHTML = '';
+        if (!data) { body.innerHTML = '<div class="panel-empty">Sin notificaciones.</div>'; return; }
+        const proximas = Object.values(data).filter(t => {
+            if (!t.inicioEst) return false;
+            const f = parseDate(t.inicioEst);
+            return f >= hoy && f <= limite;
+        }).sort((a,b) => parseDate(a.inicioEst)-parseDate(b.inicioEst));
+        if (!proximas.length) { body.innerHTML = '<div class="panel-empty">Sin tareas en los próximos 5 días.</div>'; return; }
+        proximas.forEach(t => {
+            const diff = Math.round((parseDate(t.inicioEst)-hoy)/86400000);
+            const label = diff===0?'🔴 Hoy':diff===1?'🟠 Mañana':`🟡 En ${diff} días`;
+            const item = document.createElement('div');
+            item.className = 'panel-item';
+            item.innerHTML = `
+                <div class="panel-item-titulo">${t.equipo} · ${t.sector}</div>
+                <div class="panel-item-desc">${t.descripcion}</div>
+                <div class="panel-item-meta">
+                    <span class="panel-estado-dot" style="background:${colores[t.estado]||'#888'}"></span>
+                    <span style="font-size:12px;color:var(--texto-soft);font-weight:600">${t.estado}</span>
+                    <span class="panel-item-fecha">${label} · ${formatFecha(t.inicioEst)}</span>
+                </div>`;
+            body.appendChild(item);
+        });
+    });
+}
+
+function actualizarBadgeNotif() {
+    const badge = document.getElementById('badge-notif');
+    if (!badge) return;
+    const hoy    = new Date(); hoy.setHours(0,0,0,0);
+    const limite = new Date(hoy); limite.setDate(hoy.getDate()+5);
+    db.ref('tareas').once('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) { badge.textContent='0'; badge.classList.add('empty'); return; }
+        const count = Object.values(data).filter(t => {
+            if (!t.inicioEst) return false;
+            const f = parseDate(t.inicioEst);
+            return f >= hoy && f <= limite;
+        }).length;
+        badge.textContent = count;
+        count>0 ? badge.classList.remove('empty') : badge.classList.add('empty');
+    });
+}
+
+// ─────────────────────────────────────────
+// MODAL INFO (desde Gantt)
+// ─────────────────────────────────────────
+let _infoIdActual = null;
+
+function abrirInfo(id) {
+    db.ref('tareas/'+id).once('value', snapshot => {
+        const t = snapshot.val();
+        if (!t) return;
+        _infoIdActual = id;
+
+        document.getElementById('info-titulo').textContent      = `${t.equipo} · ${t.sector}`;
+        document.getElementById('info-descripcion').textContent = t.descripcion;
+
+        const iconos = { Pendiente:'🟡', 'En progreso':'🔵', Finalizada:'🟢', Demorada:'🔴' };
+        const claseEstado = (t.estado||'Pendiente').replace(' ','-');
+        document.getElementById('info-estado-badge').innerHTML =
+            `<span class="info-estado ${claseEstado}">${iconos[t.estado]||'⚪'} ${t.estado}</span>`;
+
+        let fechas = '';
+        if (t.inicioEst) fechas += `📅 Estimado: <strong>${formatFecha(t.inicioEst)}${t.finEst?' → '+formatFecha(t.finEst):''}</strong><br>`;
+        if (t.inicioReal) fechas += `✅ Real: <strong>${formatFecha(t.inicioReal)}${t.finReal?' → '+formatFecha(t.finReal):''}</strong>`;
+        document.getElementById('info-fechas').innerHTML = fechas || '<em>Sin fechas cargadas</em>';
+
+        const btnEditar = document.getElementById('info-btn-editar');
+        if (btnEditar) btnEditar.style.display = rolActual === 'admin' ? 'block' : 'none';
+
+        document.getElementById('info-overlay').classList.remove('hidden');
+    });
+}
+
+function cerrarInfo() {
+    document.getElementById('info-overlay').classList.add('hidden');
+    _infoIdActual = null;
+}
+
+function pasarAEditar() {
+    cerrarInfo();
+    if (_infoIdActual) setTimeout(() => abrirModal(_infoIdActual), 100);
+}
+
+// ─────────────────────────────────────────
+// MODAL EDICIÓN
+// ─────────────────────────────────────────
+function abrirModal(id) {
+    db.ref('tareas/'+id).once('value', snapshot => {
+        const t = snapshot.val();
+        if (!t) return;
+        document.getElementById('modal-titulo').textContent      = `${t.equipo} · ${t.sector}`;
+        document.getElementById('modal-descripcion').textContent = t.descripcion;
+        document.getElementById('modal-inicioReal').value        = t.inicioReal||'';
+        document.getElementById('modal-finReal').value           = t.finReal||'';
+        document.getElementById('modal-estado').value            = t.estado||'Pendiente';
+        document.getElementById('modal-id').value                = id;
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    });
+}
+function cerrarModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function guardarEdicion() {
+    const id         = document.getElementById('modal-id').value;
+    const inicioReal = document.getElementById('modal-inicioReal').value;
+    const finReal    = document.getElementById('modal-finReal').value;
+    const estado     = document.getElementById('modal-estado').value;
+    db.ref('tareas/'+id).update({ inicioReal, finReal, estado })
+        .then(() => { cerrarModal(); cargarEstados(); actualizarBadgeNotif(); construirGantt(); })
+        .catch(err => alert('Error: '+err.message));
+}
+
+function eliminarTarea(id) {
+    if (!confirm('¿Eliminar esta tarea?')) return;
+    db.ref('tareas/'+id).remove()
+        .then(() => { cargarEstados(); actualizarBadgeNotif(); })
+        .catch(err => alert('Error: '+err.message));
+}
+
+// ─────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────
+function formatFecha(str) {
+    if (!str) return '';
+    const [y,m,d] = str.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) overlay.addEventListener('click', e => { if (e.target===overlay) cerrarModal(); });
+
+    const infoOverlay = document.getElementById('info-overlay');
+    if (infoOverlay) infoOverlay.addEventListener('click', e => { if (e.target===infoOverlay) cerrarInfo(); });
+
+    actualizarBadgeNotif();
+    if (!document.getElementById('vista-cargar')) {
+        mostrarVista('estados');
+    }
+});
