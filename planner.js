@@ -47,7 +47,13 @@ function mostrarVista(nombre) {
     if (navSub) navSub.classList.toggle('hidden', nombre !== 'estados');
 
     if (nombre === 'estados')    { filtroActivo = 'todas'; cargarEstados(); }
-    if (nombre === 'calendario') setTimeout(construirGantt, 80);
+    if (nombre === 'calendario') {
+        setTimeout(construirGantt, 80);
+    }
+
+    // Mostrar botón fullscreen solo en vista calendario
+    const fsBtn = document.getElementById('ganttFsBtn');
+    if (fsBtn) fsBtn.style.display = nombre === 'calendario' ? 'flex' : 'none';
 
     cerrarPaneles();
 }
@@ -322,14 +328,14 @@ function toggleGanttFS() {
         }
         const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen;
         if (req) req.call(wrapper);
-        if (btn) btn.innerHTML = '✕ Salir';
+        if (btn) { btn.innerHTML = '✕ Salir'; btn.classList.add('fs-active'); }
     } else {
         const exit = document.exitFullscreen || document.webkitExitFullscreen;
         if (exit) exit.call(document);
         if (screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
         }
-        if (btn) btn.innerHTML = '⛶ Pantalla completa';
+        if (btn) { btn.innerHTML = '⛶ Pantalla completa'; btn.classList.remove('fs-active'); }
     }
 }
 
@@ -339,7 +345,13 @@ function _syncFsBtn() {
     const btn = document.getElementById('ganttFsBtn');
     if (!btn) return;
     const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    btn.innerHTML = isFS ? '✕ Salir' : '⛶ Pantalla completa';
+    if (isFS) {
+        btn.innerHTML = '✕ Salir';
+        btn.classList.add('fs-active');
+    } else {
+        btn.innerHTML = '⛶ Pantalla completa';
+        btn.classList.remove('fs-active');
+    }
 }
 
 // ─────────────────────────────────────────
@@ -503,6 +515,11 @@ function formatFecha(str) {
 document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('modal-overlay');
     if (overlay) overlay.addEventListener('click', e => { if (e.target===overlay) cerrarModal(); });
+
+    // Ocultar botón FS hasta que se abra el calendario
+    const fsBtn = document.getElementById('ganttFsBtn');
+    if (fsBtn) fsBtn.style.display = 'none';
+
     actualizarBadgeNotif();
     if (!document.getElementById('vista-cargar')) {
         mostrarVista('estados');
