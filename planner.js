@@ -326,12 +326,11 @@ document.addEventListener('fullscreenchange',       _syncFsBtn);
 document.addEventListener('webkitfullscreenchange', _syncFsBtn);
 
 function _syncFsBtn() {
-    const wrapper = document.querySelector('.gantt-wrapper');
     const btnOrig = document.getElementById('ganttFsBtn');
+    const wrapper = document.querySelector('.gantt-wrapper');
     const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
 
     if (isFS && wrapper) {
-        // Crear botón ✕ dentro del wrapper para que sea visible en fullscreen
         let btnFS = wrapper.querySelector('.gantt-fs-btn-inner');
         if (!btnFS) {
             btnFS = document.createElement('button');
@@ -340,15 +339,14 @@ function _syncFsBtn() {
             wrapper.appendChild(btnFS);
         }
         btnFS.textContent = '✕';
+        if (btnOrig) btnOrig.style.display = 'none';
     } else {
-        // Eliminar botón interno al salir
         const btnFS = document.querySelector('.gantt-wrapper .gantt-fs-btn-inner');
         if (btnFS) btnFS.remove();
         if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+        const vistaCalendario = document.getElementById('vista-calendario');
+        if (btnOrig) btnOrig.style.display = (vistaCalendario && !vistaCalendario.classList.contains('hidden')) ? 'flex' : 'none';
     }
-
-    // El botón externo siempre visible si estamos en vista calendario (no en FS)
-    if (btnOrig) btnOrig.style.display = (!isFS && document.getElementById('vista-calendario') && !document.getElementById('vista-calendario').classList.contains('hidden')) ? 'flex' : 'none';
 }
 
 // ─────────────────────────────────────────
