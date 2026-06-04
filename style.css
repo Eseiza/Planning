@@ -288,9 +288,10 @@ nav.nav-sub {
 ══════════════════════════════ */
 .gantt-fs-btn {
     display: none;
-    position: fixed;
-    bottom: 90px; right: 14px;
-    z-index: 300;
+    position: absolute;
+    bottom: 16px; right: 16px;
+    z-index: 9999;
+    pointer-events: all;
     border: none;
     background: var(--acento);
     color: #fff;
@@ -307,6 +308,16 @@ nav.nav-sub {
 }
 .gantt-fs-btn:hover { background: var(--acento-hover); }
 
+/* En fullscreen el botón pasa a fixed (el wrapper ES el viewport) */
+.gantt-wrapper:fullscreen .gantt-fs-btn,
+.gantt-wrapper:-webkit-full-screen .gantt-fs-btn {
+    position: fixed;
+    bottom: 16px; right: 16px;
+    background: rgba(0,0,0,0.6);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    z-index: 9999;
+}
+
 .gantt-wrapper:fullscreen,
 .gantt-wrapper:-webkit-full-screen {
     background: var(--bg-card);
@@ -320,12 +331,6 @@ nav.nav-sub {
 .gantt-wrapper:-webkit-full-screen .gantt-scroll {
     width: 100vw;
     height: 100vh;
-}
-
-.gantt-fs-btn.fs-active {
-    bottom: 12px; right: 12px;
-    background: rgba(0,0,0,0.55);
-    box-shadow: var(--shadow);
 }
 
 /* ══════════════════════════════
@@ -536,6 +541,10 @@ nav.nav-sub {
 
     /* Mostrar botón fullscreen solo en mobile */
     .gantt-fs-btn { display: flex; }
+
+    /* Label más angosto para que se vean las barras */
+    .gt-label-cell { max-width: 130px; min-width: 0 !important; }
+    .gt-label-text { font-size: 11px; }
 
     .fab-group {
         top: auto; bottom: 20px; right: 14px;
