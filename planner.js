@@ -272,10 +272,16 @@ function construirGantt() {
 }
 
 function initGanttDrag(el) {
+    // Scroll nativo en mobile (touch)
+    el.style.webkitOverflowScrolling = 'touch';
+    el.style.overflowX = 'auto';
+    el.style.overflowY = 'auto';
+
+    // Drag con mouse en desktop
     let isDown = false, startX, startY, scrollLeft, scrollTop;
 
     el.addEventListener('mousedown', e => {
-        if (e.target.classList.contains('gantt-bar')) return;
+        if (e.target.closest('.gt-bar')) return;
         isDown = true;
         el.classList.add('grabbing');
         startX = e.pageX - el.offsetLeft;
@@ -291,18 +297,6 @@ function initGanttDrag(el) {
         el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
         el.scrollTop  = scrollTop  - (e.pageY - el.offsetTop  - startY);
     });
-
-    let tx, ty, tsl, tst;
-    el.addEventListener('touchstart', e => {
-        tx  = e.touches[0].pageX;
-        ty  = e.touches[0].pageY;
-        tsl = el.scrollLeft;
-        tst = el.scrollTop;
-    }, { passive:true });
-    el.addEventListener('touchmove', e => {
-        el.scrollLeft = tsl - (e.touches[0].pageX - tx);
-        el.scrollTop  = tst - (e.touches[0].pageY - ty);
-    }, { passive:true });
 }
 
 // ─────────────────────────────────────────
