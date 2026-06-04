@@ -47,9 +47,10 @@ function mostrarVista(nombre) {
     if (navSub) navSub.classList.toggle('hidden', nombre !== 'estados');
 
     if (nombre === 'estados')    { filtroActivo = 'todas'; cargarEstados(); }
-    if (nombre === 'calendario') {
-        setTimeout(construirGantt, 80);
-    }
+    if (nombre === 'calendario') { setTimeout(construirGantt, 80); }
+
+    const fsBtn = document.getElementById('ganttFsBtn');
+    if (fsBtn) fsBtn.style.display = nombre === 'calendario' ? 'flex' : 'none';
 
     cerrarPaneles();
 }
@@ -304,13 +305,9 @@ function initGanttDrag(el) {
 // ─────────────────────────────────────────
 function toggleGanttFS() {
     const wrapper = document.querySelector('.gantt-wrapper');
-    const btn     = document.getElementById('ganttFsBtn');
     if (!wrapper) return;
 
-    const isFS = !!(
-        document.fullscreenElement ||
-        document.webkitFullscreenElement
-    );
+    const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
 
     if (!isFS) {
         if (screen.orientation && screen.orientation.lock) {
@@ -318,30 +315,40 @@ function toggleGanttFS() {
         }
         const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen;
         if (req) req.call(wrapper);
-        if (btn) { btn.innerHTML = '✕ Salir'; btn.classList.add('fs-active'); }
     } else {
         const exit = document.exitFullscreen || document.webkitExitFullscreen;
         if (exit) exit.call(document);
-        if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-        }
-        if (btn) { btn.innerHTML = '⛶ Pantalla completa'; btn.classList.remove('fs-active'); }
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
     }
 }
 
 document.addEventListener('fullscreenchange',       _syncFsBtn);
 document.addEventListener('webkitfullscreenchange', _syncFsBtn);
+
 function _syncFsBtn() {
-    const btn = document.getElementById('ganttFsBtn');
-    if (!btn) return;
+    const wrapper = document.querySelector('.gantt-wrapper');
+    const btnOrig = document.getElementById('ganttFsBtn');
     const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    if (isFS) {
-        btn.innerHTML = '✕ Salir';
-        btn.classList.add('fs-active');
+
+    if (isFS && wrapper) {
+        // Crear botón ✕ dentro del wrapper para que sea visible en fullscreen
+        let btnFS = wrapper.querySelector('.gantt-fs-btn-inner');
+        if (!btnFS) {
+            btnFS = document.createElement('button');
+            btnFS.className = 'gantt-fs-btn-inner';
+            btnFS.onclick = toggleGanttFS;
+            wrapper.appendChild(btnFS);
+        }
+        btnFS.textContent = '✕';
     } else {
-        btn.innerHTML = '⛶ Pantalla completa';
-        btn.classList.remove('fs-active');
+        // Eliminar botón interno al salir
+        const btnFS = document.querySelector('.gantt-wrapper .gantt-fs-btn-inner');
+        if (btnFS) btnFS.remove();
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
     }
+
+    // El botón externo siempre visible si estamos en vista calendario (no en FS)
+    if (btnOrig) btnOrig.style.display = (!isFS && document.getElementById('vista-calendario') && !document.getElementById('vista-calendario').classList.contains('hidden')) ? 'flex' : 'none';
 }
 
 // ─────────────────────────────────────────
