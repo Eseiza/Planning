@@ -291,20 +291,21 @@ nav.nav-sub {
     position: absolute;
     top: 8px; right: 8px;
     z-index: 10;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--texto-soft);
-    padding: 6px 10px;
-    border-radius: 8px;
+    border: none;
+    background: var(--acento);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     font-family: 'DM Sans', sans-serif;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow);
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    white-space: nowrap;
 }
-.gantt-fs-btn:hover { background: var(--bg-soft); }
+.gantt-fs-btn:hover { background: var(--acento-hover); }
 
 .gantt-wrapper:fullscreen,
 .gantt-wrapper:-webkit-full-screen {
@@ -324,11 +325,12 @@ nav.nav-sub {
 .gantt-wrapper:fullscreen .gantt-fs-btn,
 .gantt-wrapper:-webkit-full-screen .gantt-fs-btn {
     position: fixed;
-    top: 10px; right: 10px;
-    background: var(--acento);
+    top: 12px; right: 12px;
+    background: rgba(0,0,0,0.55);
     color: #fff;
-    border-color: var(--acento-hover);
+    border: none;
     box-shadow: var(--shadow);
+    z-index: 9999;
 }
 
 /* ══════════════════════════════
@@ -519,16 +521,20 @@ nav.nav-sub {
 
     .estado-container { grid-template-columns: 1fr; gap: 10px; }
 
-    .gantt-wrapper { height: calc(100vh - 80px); border-radius: 8px; }
-    .gt-row        { min-height: 52px; }
-    .gt-label-text { font-size: 13px; }
-    .gt-day-cell   { font-size: 11px; height: 32px; }
-    .gt-month-cell { font-size: 12px; height: 36px; }
-    .gt-bar        { height: 28px; border-radius: 6px; }
-    .gt-bar-label  { font-size: 12px; }
+    .gantt-wrapper { height: calc(100vh - 160px); border-radius: 8px; }
+    .gt-row        { min-height: 48px; }
+    .gt-label-text { font-size: 12px; }
+    .gt-day-cell   { font-size: 10px; height: 28px; }
+    .gt-month-cell { font-size: 11px; height: 32px; }
+    .gt-bar        { height: 26px; border-radius: 5px; }
+    .gt-bar-label  { font-size: 11px; }
 
     /* Mostrar botón fullscreen solo en mobile */
     .gantt-fs-btn { display: flex; }
+
+    /* Label más angosto para que se vean las barras */
+    .gt-label-cell { max-width: 130px; min-width: 0 !important; }
+    .gt-label-text { font-size: 11px; }
 
     .fab-group {
         top: auto; bottom: 20px; right: 14px;
