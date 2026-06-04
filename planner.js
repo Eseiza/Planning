@@ -261,8 +261,8 @@ function construirGantt() {
 
             html += `<div class="gt-bar${esReal?' gt-bar-real':''}"
                           style="left:${barL}px;width:${barW}px;background:${color}"
-                          onclick="abrirModal('${t.id}')"
-                          title="${t.equipo} · ${t.sector}\n${t.descripcion}\n${esReal?'Real':'Est'}: ${formatFecha(t.inicioReal||t.inicioEst)} → ${formatFecha(t.finReal||t.finEst||t.inicioReal||t.inicioEst)}">
+                          onclick="abrirInfo('${t.id}')"
+                          title="${t.equipo} · ${t.sector}\n${t.descripcion}">
                         <span class="gt-bar-label">${t.equipo}</span>
                      </div>`;
 
@@ -467,6 +467,47 @@ function actualizarBadgeNotif() {
 }
 
 // ─────────────────────────────────────────
+// MODAL INFO (desde Gantt)
+// ─────────────────────────────────────────
+let _infoIdActual = null;
+
+function abrirInfo(id) {
+    db.ref('tareas/'+id).once('value', snapshot => {
+        const t = snapshot.val();
+        if (!t) return;
+        _infoIdActual = id;
+
+        document.getElementById('info-titulo').textContent      = `${t.equipo} · ${t.sector}`;
+        document.getElementById('info-descripcion').textContent = t.descripcion;
+
+        const iconos = { Pendiente:'🟡', 'En progreso':'🔵', Finalizada:'🟢', Demorada:'🔴' };
+        const claseEstado = (t.estado||'Pendiente').replace(' ','-');
+        document.getElementById('info-estado-badge').innerHTML =
+            `<span class="info-estado ${claseEstado}">${iconos[t.estado]||'⚪'} ${t.estado}</span>`;
+
+        let fechas = '';
+        if (t.inicioEst) fechas += `📅 Estimado: <strong>${formatFecha(t.inicioEst)}${t.finEst?' → '+formatFecha(t.finEst):''}</strong><br>`;
+        if (t.inicioReal) fechas += `✅ Real: <strong>${formatFecha(t.inicioReal)}${t.finReal?' → '+formatFecha(t.finReal):''}</strong>`;
+        document.getElementById('info-fechas').innerHTML = fechas || '<em>Sin fechas cargadas</em>';
+
+        const btnEditar = document.getElementById('info-btn-editar');
+        if (btnEditar) btnEditar.style.display = rolActual === 'admin' ? 'block' : 'none';
+
+        document.getElementById('info-overlay').classList.remove('hidden');
+    });
+}
+
+function cerrarInfo() {
+    document.getElementById('info-overlay').classList.add('hidden');
+    _infoIdActual = null;
+}
+
+function pasarAEditar() {
+    cerrarInfo();
+    if (_infoIdActual) setTimeout(() => abrirModal(_infoIdActual), 100);
+}
+
+// ─────────────────────────────────────────
 // MODAL EDICIÓN
 // ─────────────────────────────────────────
 function abrirModal(id) {
@@ -515,6 +556,9 @@ function formatFecha(str) {
 document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('modal-overlay');
     if (overlay) overlay.addEventListener('click', e => { if (e.target===overlay) cerrarModal(); });
+
+    const infoOverlay = document.getElementById('info-overlay');
+    if (infoOverlay) infoOverlay.addEventListener('click', e => { if (e.target===infoOverlay) cerrarInfo(); });
 
     // Ocultar botón FS hasta que se abra el calendario
     const fsBtn = document.getElementById('ganttFsBtn');
