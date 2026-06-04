@@ -51,10 +51,6 @@ function mostrarVista(nombre) {
         setTimeout(construirGantt, 80);
     }
 
-    // Mostrar botón fullscreen solo en vista calendario
-    const fsBtn = document.getElementById('ganttFsBtn');
-    if (fsBtn) fsBtn.style.display = nombre === 'calendario' ? 'flex' : 'none';
-
     cerrarPaneles();
 }
 
@@ -559,10 +555,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const infoOverlay = document.getElementById('info-overlay');
     if (infoOverlay) infoOverlay.addEventListener('click', e => { if (e.target===infoOverlay) cerrarInfo(); });
-
-    // Ocultar botón FS hasta que se abra el calendario
-    const fsBtn = document.getElementById('ganttFsBtn');
-    if (fsBtn) fsBtn.style.display = 'none';
 
     actualizarBadgeNotif();
     if (!document.getElementById('vista-cargar')) {
