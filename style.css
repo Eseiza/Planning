@@ -227,7 +227,14 @@ nav.nav-sub {
     height: calc(100vh - 118px); box-shadow: var(--shadow-xs);
     position: relative;
 }
-.gantt-scroll { width: 100%; height: 100%; overflow: auto; cursor: grab; user-select: none; }
+.gantt-scroll {
+    width: 100%; height: 100%;
+    overflow: auto;
+    cursor: grab;
+    user-select: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+}
 .gantt-scroll.grabbing { cursor: grabbing; }
 .gantt-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
 .gantt-scroll::-webkit-scrollbar-track { background: var(--bg-soft); }
