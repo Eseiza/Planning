@@ -447,6 +447,16 @@ nav.nav-sub {
 #loginForm button:hover { background: var(--acento-hover); transform: translateY(-1px); }
 #loginMessage { margin-top: 12px; text-align: center; font-weight: 600; font-size: 13px; }
 
+.info-estado {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+}
+.info-estado.Pendiente   { background: var(--pendiente-bg);  color: var(--pendiente);  border: 1px solid var(--pendiente-brd); }
+.info-estado.En-progreso { background: var(--progreso-bg);   color: var(--progreso);   border: 1px solid var(--progreso-brd); }
+.info-estado.Finalizada  { background: var(--finalizada-bg); color: var(--finalizada); border: 1px solid var(--finalizada-brd); }
+.info-estado.Demorada    { background: var(--demorada-bg);   color: var(--demorada);   border: 1px solid var(--demorada-brd); }
+
 /* ══════════════════════════════
    MODAL
 ══════════════════════════════ */
