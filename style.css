@@ -295,35 +295,23 @@ nav.nav-sub {
 ══════════════════════════════ */
 .gantt-fs-btn {
     display: none;
-    position: absolute;
-    bottom: 16px; right: 16px;
-    z-index: 9999;
-    pointer-events: all;
+    position: fixed;
+    bottom: 20px; left: 16px;
+    z-index: 198;
     border: none;
     background: var(--acento);
     color: #fff;
-    padding: 10px 16px;
-    border-radius: 24px;
+    width: 46px; height: 46px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: 'DM Sans', sans-serif;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.45);
+    font-size: 20px;
+    transition: all 0.16s;
     align-items: center;
-    gap: 6px;
-    white-space: nowrap;
+    justify-content: center;
+    box-shadow: 0 3px 12px rgba(37,99,235,0.35);
+    font-family: 'DM Sans', sans-serif;
 }
-.gantt-fs-btn:hover { background: var(--acento-hover); }
-
-/* En fullscreen el botón pasa a fixed (el wrapper ES el viewport) */
-.gantt-wrapper:fullscreen .gantt-fs-btn,
-.gantt-wrapper:-webkit-full-screen .gantt-fs-btn {
-    position: fixed;
-    bottom: 16px; right: 16px;
-    background: rgba(0,0,0,0.6);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    z-index: 9999;
-}
+.gantt-fs-btn:hover { background: var(--acento-hover); transform: scale(1.07); }
 
 .gantt-wrapper:fullscreen,
 .gantt-wrapper:-webkit-full-screen {
@@ -333,12 +321,29 @@ nav.nav-sub {
     height: 100vh;
     width: 100vw;
 }
-
 .gantt-wrapper:fullscreen .gantt-scroll,
 .gantt-wrapper:-webkit-full-screen .gantt-scroll {
     width: 100vw;
     height: 100vh;
 }
+/* Botón ✕ que aparece dentro del wrapper en fullscreen */
+.gantt-fs-btn-inner {
+    position: fixed;
+    bottom: 20px; left: 16px;
+    z-index: 9999;
+    border: none;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.16s;
+}
+.gantt-fs-btn-inner:hover { transform: scale(1.07); background: rgba(0,0,0,0.75); }
 
 /* ══════════════════════════════
    FAB
@@ -545,9 +550,6 @@ nav.nav-sub {
     .gt-month-cell { font-size: 11px; height: 32px; }
     .gt-bar        { height: 26px; border-radius: 5px; }
     .gt-bar-label  { font-size: 11px; }
-
-    /* Mostrar botón fullscreen solo en mobile */
-    .gantt-fs-btn { display: flex; }
 
     /* Label más angosto para que se vean las barras */
     .gt-label-cell { max-width: 130px; min-width: 0 !important; }
