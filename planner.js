@@ -2,13 +2,14 @@
 // FIREBASE
 // ─────────────────────────────────────────
 const firebaseConfig = {
-    apiKey: "AIzaSyAJgnFCKt_8TT4BpWrDwqy--Oep0raYA18",
-    authDomain: "romero-env.firebaseapp.com",
-    databaseURL: "https://romero-env-default-rtdb.firebaseio.com",
-    projectId: "romero-env",
-    storageBucket: "romero-env.firebasestorage.app",
-    messagingSenderId: "350498956335",
-    appId: "1:350498956335:web:901f91c4d7b983308252da"
+  apiKey: "AIzaSyChA3HyR-wRvpQX1rYoFcpC4QBsMpmm2x8",
+  authDomain: "planning-4c106.firebaseapp.com",
+  databaseURL: "https://planning-4c106-default-rtdb.firebaseio.com",
+  projectId: "planning-4c106",
+  storageBucket: "planning-4c106.firebasestorage.app",
+  messagingSenderId: "57138484731",
+  appId: "1:57138484731:web:51703733ddf21ea018675e",
+  measurementId: "G-BJZF7927BC"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
